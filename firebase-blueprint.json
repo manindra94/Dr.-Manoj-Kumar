@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "content": {
+      "title": "Site Content",
+      "description": "Global content for Home and About pages",
+      "fields": {
+        "homepage": {
+          "type": "map",
+          "description": "Hero, taglines, stats, verticals, announcement banner"
+        },
+        "about": {
+          "type": "map",
+          "description": "Bio, profile details, career journey, academic degrees, awards"
+        }
+      }
+    },
+    "publications": {
+      "title": "Publications & Patents",
+      "description": "Research papers, patents, and conference proceedings",
+      "fields": {
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "year": { "type": "number" },
+        "authors": { "type": "string" },
+        "journal": { "type": "string" },
+        "abstract": { "type": "string" },
+        "citations": { "type": "number" },
+        "tags": { "type": "array" },
+        "url": { "type": "string" }
+      }
+    },
+    "blog_posts": {
+      "title": "Blog Posts & Lab Logs",
+      "description": "Laboratory logs, preprints, and updates",
+      "fields": {
+        "title": { "type": "string" },
+        "logCode": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string" },
+        "readTime": { "type": "string" },
+        "tags": { "type": "array" }
+      }
+    },
+    "gallery_items": {
+      "title": "Gallery Figures",
+      "description": "Micrographs, SEM scans, and 3D printing images",
+      "fields": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "scaleBar": { "type": "string" },
+        "figureNo": { "type": "string" }
+      }
+    },
+    "settings": {
+      "title": "System Settings",
+      "description": "Portal and application preferences",
+      "fields": {
+        "displayMode": { "type": "string" },
+        "accentColor": { "type": "string" },
+        "publicProfile": { "type": "boolean" },
+        "offlineSyncEnabled": { "type": "boolean" }
+      }
+    },
+    "analytics": {
+      "title": "Analytics Metrics",
+      "description": "Laboratory analytics and research impact stats",
+      "fields": {
+        "metrics": { "type": "map" },
+        "monthlyViews": { "type": "array" },
+        "citationGrowth": { "type": "array" }
+      }
+    },
+    "users": {
+      "title": "User Accounts",
+      "description": "Admin and registered user profiles with roles",
+      "fields": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string" },
+        "affiliation": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "messages": {
+      "title": "Contact Messages",
+      "description": "Visitor contact inquiries and collaboration requests",
+      "fields": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    }
+  }
+}

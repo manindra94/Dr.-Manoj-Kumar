@@ -1,0 +1,10 @@
+{
+  "name": "Dr. Manoj Kumar - CSIR-IMMT Portfolio",
+  "description": "Scientific research portfolio for Senior Scientist Dr. Manoj Kumar at CSIR-IMMT, featuring Metal Additive Manufacturing research, publication database, offline sync, E2E encryption telemetry, task reminders, and analytics dashboard.",
+  "requestFramePermissions": [
+    "notifications"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
