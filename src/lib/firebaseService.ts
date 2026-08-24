@@ -231,6 +231,8 @@ export class FirebaseBackendService {
       if (snap.exists() && snap.data().items) {
         callback(snap.data().items as CareerMilestone[]);
       }
+    }, (err) => {
+      console.warn('Error listening to career in Firestore:', err);
     });
   }
 
@@ -239,6 +241,8 @@ export class FirebaseBackendService {
       if (snap.exists() && snap.data().items) {
         callback(snap.data().items as AcademicDegree[]);
       }
+    }, (err) => {
+      console.warn('Error listening to academic in Firestore:', err);
     });
   }
 
@@ -247,6 +251,8 @@ export class FirebaseBackendService {
       if (snap.exists() && snap.data().items) {
         callback(snap.data().items as AwardItem[]);
       }
+    }, (err) => {
+      console.warn('Error listening to awards in Firestore:', err);
     });
   }
 

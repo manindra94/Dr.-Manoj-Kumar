@@ -15,7 +15,17 @@ import {
   Clock,
   MessageSquare,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Home,
+  User,
+  FileText,
+  Image,
+  Activity,
+  Settings,
+  ChevronRight,
+  FilePlus2,
+  Globe2,
+  Atom
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { localDB } from '../lib/db';
@@ -329,67 +339,132 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
             </div>
           </div>
 
-          {/* Column 2: Quick Links */}
+          {/* Column 2: Sections & Portfolio */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-bold text-[#d4e4fa] uppercase tracking-wider">
-              Sections & Portfolio
+            <h4 className="text-xs font-mono font-bold text-[#d4e4fa] uppercase tracking-wider flex items-center gap-1.5">
+              <Atom className="w-3.5 h-3.5 text-[#ffc640]" />
+              <span>Sections & Portfolio</span>
             </h4>
-            <ul className="space-y-1.5 text-xs font-mono">
+            <ul className="space-y-1 text-xs font-mono">
               <li>
                 <button
                   onClick={() => setActiveTab('home')}
-                  className="text-slate-400 hover:text-[#ffc640] transition-colors"
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-[#ffc640] hover:bg-[#122131] transition-all flex items-center justify-between group"
                 >
-                  Overview & Highlights
+                  <span className="flex items-center gap-2">
+                    <Home className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#ffc640] transition-colors shrink-0" />
+                    <span>Overview & Highlights</span>
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#ffc640] group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('about')}
-                  className="text-slate-400 hover:text-[#ffc640] transition-colors"
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-[#ffc640] hover:bg-[#122131] transition-all flex items-center justify-between group"
                 >
-                  Scientist Biography & Career
+                  <span className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#ffc640] transition-colors shrink-0" />
+                    <span>Scientist Biography & Career</span>
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#ffc640] group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('papers')}
-                  className="text-slate-400 hover:text-[#ffc640] transition-colors"
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-[#ffc640] hover:bg-[#122131] transition-all flex items-center justify-between group"
                 >
-                  Research Papers & Reprints
+                  <span className="flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5 text-[#ffc640]/70 group-hover:text-[#ffc640] transition-colors shrink-0" />
+                    <span>Publications & Patents</span>
+                  </span>
+                  {(!user || user.isAnonymous) ? (
+                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
+                  ) : (
+                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#ffc640] group-hover:translate-x-0.5 transition-all" />
+                  )}
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('blog')}
-                  className="text-slate-400 hover:text-[#ffc640] transition-colors"
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-[#2fd9f4] hover:bg-[#122131] transition-all flex items-center justify-between group"
                 >
-                  Lab Logs & Dispatches
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-3.5 h-3.5 text-[#2fd9f4]/70 group-hover:text-[#2fd9f4] transition-colors shrink-0" />
+                    <span>Laboratory Logs & Preprints</span>
+                  </span>
+                  {(!user || user.isAnonymous) ? (
+                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
+                  ) : (
+                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#2fd9f4] group-hover:translate-x-0.5 transition-all" />
+                  )}
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('gallery')}
-                  className="text-slate-400 hover:text-[#ffc640] transition-colors"
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-purple-400 hover:bg-[#122131] transition-all flex items-center justify-between group"
                 >
-                  Microscopy & Characterization
+                  <span className="flex items-center gap-2">
+                    <Image className="w-3.5 h-3.5 text-purple-400/70 group-hover:text-purple-400 transition-colors shrink-0" />
+                    <span>Micrograph & Material Gallery</span>
+                  </span>
+                  {(!user || user.isAnonymous) ? (
+                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
+                  ) : (
+                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
+                  )}
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => setActiveTab('analytics')}
-                  className="text-slate-400 hover:text-[#ffc640] transition-colors"
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-emerald-400 hover:bg-[#122131] transition-all flex items-center justify-between group"
                 >
-                  Citation Impact & Metrics
+                  <span className="flex items-center gap-2">
+                    <Activity className="w-3.5 h-3.5 text-emerald-400/70 group-hover:text-emerald-400 transition-colors shrink-0" />
+                    <span>Scientometrics & Analytics</span>
+                  </span>
+                  {(!user || user.isAnonymous) ? (
+                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
+                  ) : (
+                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+                  )}
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className="w-full text-left py-1 px-1.5 rounded-md text-slate-400 hover:text-[#ffc640] hover:bg-[#122131] transition-all flex items-center justify-between group"
+                >
+                  <span className="flex items-center gap-2">
+                    <Settings className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#ffc640] transition-colors shrink-0" />
+                    <span>Laboratory CMS & Settings</span>
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#ffc640] group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               {onOpenSubmissionModal && (
-                <li className="pt-1">
+                <li className="pt-1.5 border-t border-[#1c2b3c]/60">
                   <button
                     onClick={() => onOpenSubmissionModal('publication')}
-                    className="text-emerald-400 hover:text-emerald-300 transition-colors font-bold flex items-center gap-1"
+                    className="w-full py-1.5 px-2 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/30 transition-all font-bold flex items-center justify-between group text-[11px]"
                   >
-                    <span>⚡ Submit Research (Supabase)</span>
+                    <span className="flex items-center gap-1.5">
+                      <FilePlus2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Submit Research Paper</span>
+                    </span>
+                    <Sparkles className="w-3 h-3 text-emerald-400 group-hover:rotate-12 transition-transform" />
                   </button>
                 </li>
               )}

@@ -3,13 +3,14 @@
     "content": {
       "title": "Site Content",
       "description": "Global content for Home and About pages",
-      "fields": {
+      "type": "object",
+      "properties": {
         "homepage": {
-          "type": "map",
+          "type": "object",
           "description": "Hero, taglines, stats, verticals, announcement banner"
         },
         "about": {
-          "type": "map",
+          "type": "object",
           "description": "Bio, profile details, career journey, academic degrees, awards"
         }
       }
@@ -17,7 +18,8 @@
     "publications": {
       "title": "Publications & Patents",
       "description": "Research papers, patents, and conference proceedings",
-      "fields": {
+      "type": "object",
+      "properties": {
         "title": { "type": "string" },
         "type": { "type": "string" },
         "year": { "type": "number" },
@@ -32,7 +34,8 @@
     "blog_posts": {
       "title": "Blog Posts & Lab Logs",
       "description": "Laboratory logs, preprints, and updates",
-      "fields": {
+      "type": "object",
+      "properties": {
         "title": { "type": "string" },
         "logCode": { "type": "string" },
         "excerpt": { "type": "string" },
@@ -46,7 +49,8 @@
     "gallery_items": {
       "title": "Gallery Figures",
       "description": "Micrographs, SEM scans, and 3D printing images",
-      "fields": {
+      "type": "object",
+      "properties": {
         "title": { "type": "string" },
         "category": { "type": "string" },
         "imageUrl": { "type": "string" },
@@ -58,7 +62,8 @@
     "settings": {
       "title": "System Settings",
       "description": "Portal and application preferences",
-      "fields": {
+      "type": "object",
+      "properties": {
         "displayMode": { "type": "string" },
         "accentColor": { "type": "string" },
         "publicProfile": { "type": "boolean" },
@@ -68,8 +73,9 @@
     "analytics": {
       "title": "Analytics Metrics",
       "description": "Laboratory analytics and research impact stats",
-      "fields": {
-        "metrics": { "type": "map" },
+      "type": "object",
+      "properties": {
+        "metrics": { "type": "object" },
         "monthlyViews": { "type": "array" },
         "citationGrowth": { "type": "array" }
       }
@@ -77,7 +83,8 @@
     "users": {
       "title": "User Accounts",
       "description": "Admin and registered user profiles with roles",
-      "fields": {
+      "type": "object",
+      "properties": {
         "email": { "type": "string" },
         "displayName": { "type": "string" },
         "role": { "type": "string" },
@@ -88,7 +95,8 @@
     "messages": {
       "title": "Contact Messages",
       "description": "Visitor contact inquiries and collaboration requests",
-      "fields": {
+      "type": "object",
+      "properties": {
         "name": { "type": "string" },
         "email": { "type": "string" },
         "subject": { "type": "string" },
@@ -96,6 +104,71 @@
         "createdAt": { "type": "string" },
         "status": { "type": "string" }
       }
+    },
+    "tasks": {
+      "title": "Task Reminders",
+      "description": "Research deadlines and task reminders",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "date": { "type": "string" },
+        "priority": { "type": "string" },
+        "completed": { "type": "boolean" }
+      }
+    },
+    "telemetry_logs": {
+      "title": "Telemetry Logs",
+      "description": "System event audit trail",
+      "type": "object",
+      "properties": {
+        "event": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/content/{docId}": {
+      "schema": "content",
+      "description": "Profile and homepage content documents"
+    },
+    "/publications/{pubId}": {
+      "schema": "publications",
+      "description": "Scientific publications collection"
+    },
+    "/blog_posts/{postId}": {
+      "schema": "blog_posts",
+      "description": "Research updates and lab log articles"
+    },
+    "/gallery_items/{itemId}": {
+      "schema": "gallery_items",
+      "description": "Micrographs and high-resolution figures"
+    },
+    "/analytics/{docId}": {
+      "schema": "analytics",
+      "description": "Scientometric and impact metrics"
+    },
+    "/settings/{docId}": {
+      "schema": "settings",
+      "description": "User and system preferences"
+    },
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User profiles and permissions"
+    },
+    "/messages/{messageId}": {
+      "schema": "messages",
+      "description": "Inquiries from visitors and collaborators"
+    },
+    "/tasks/{taskId}": {
+      "schema": "tasks",
+      "description": "Research deadlines and task reminders"
+    },
+    "/telemetry_logs/{logId}": {
+      "schema": "telemetry_logs",
+      "description": "System event audit trail"
     }
   }
 }

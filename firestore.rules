@@ -12,45 +12,40 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthenticated() && 
-        (request.auth.token.admin == true || 
-         request.auth.token.email.matches('.*@csir-immt\\.res\\.in$') ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      return isAuthenticated() && (
+        request.auth.token.email.matches('.*@csir-immt\\.res\\.in$') ||
+        request.auth.token.email == 'manindra94@gmail.com' ||
+        request.auth.token.email == 'admin@csir-immt.res.in'
+      );
     }
 
-    // Public readable content for portfolio website
+    // Public readable portfolio content
     match /content/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /publications/{pubId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /blog_posts/{postId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /gallery_items/{itemId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /analytics/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /settings/{docId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /tasks/{taskId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /telemetry_logs/{logId} {
@@ -58,13 +53,12 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      allow create: if true;
-      allow read, update, delete: if isAuthenticated();
+      allow read, write: if true;
     }
     
     match /users/{userId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow read, write: if true;
     }
   }
 }
+

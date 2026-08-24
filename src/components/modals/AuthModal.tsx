@@ -15,22 +15,31 @@ import {
   LogOut,
   UserPlus,
   KeyRound,
-  ArrowLeft
+  ArrowLeft,
+  FileText,
+  BookOpen,
+  Image,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
+import { ActiveTab } from '../../types';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialRole?: 'admin' | 'user';
   initialMode?: 'login' | 'signup' | 'forgot_password';
+  targetTab?: ActiveTab | null;
+  onSuccess?: (role: 'admin' | 'user') => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   initialRole = 'user',
-  initialMode = 'login'
+  initialMode = 'login',
+  targetTab = null,
+  onSuccess
 }) => {
   const {
     user,
@@ -72,6 +81,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const isAdminView = selectedRole === 'admin';
 
+  const targetTabInfo = targetTab
+    ? {
+        papers: { name: 'Publications & Patents Repository', icon: FileText, color: 'text-[#ffc640]' },
+        blog: { name: 'Laboratory Logs & Preprints', icon: BookOpen, color: 'text-[#2fd9f4]' },
+        gallery: { name: 'Micrographs & Material Gallery', icon: Image, color: 'text-[#a78bfa]' },
+        analytics: { name: 'Scientometrics & Impact Telemetry', icon: Activity, color: 'text-emerald-400' },
+        home: null,
+        about: null,
+        settings: null
+      }[targetTab]
+    : null;
+
   // Handle Email & Password / Forgot Password Submit
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,11 +107,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       } else if (authMode === 'login') {
         await loginWithEmail(email, password);
         setSuccessMsg(`Authenticated successfully as ${selectedRole === 'admin' ? 'Administrator' : 'Researcher'}!`);
-        setTimeout(() => onClose(), 800);
+        setTimeout(() => {
+          onSuccess?.(selectedRole);
+          onClose();
+        }, 800);
       } else {
         await signupWithEmail(email, password, displayName, selectedRole);
         setSuccessMsg(`Account registered successfully as ${selectedRole === 'admin' ? 'Administrator' : 'Researcher'}!`);
-        setTimeout(() => onClose(), 800);
+        setTimeout(() => {
+          onSuccess?.(selectedRole);
+          onClose();
+        }, 800);
       }
     } catch (err: any) {
       setError(err.message || 'Authentication operation failed. Please try again.');
@@ -108,7 +135,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       await loginWithGoogle(selectedRole);
       setSuccessMsg(`Signed in with Google as ${selectedRole === 'admin' ? 'Administrator' : 'Researcher'}!`);
-      setTimeout(() => onClose(), 800);
+      setTimeout(() => {
+        onSuccess?.(selectedRole);
+        onClose();
+      }, 800);
     } catch (err: any) {
       setError(err.message || 'Google sign-in was cancelled or encountered an issue.');
     } finally {
@@ -155,6 +185,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Target Destination Banner */}
+        {targetTabInfo && (
+          <div className="p-3 rounded-xl bg-[#1c2b3c] border border-[#2fd9f4]/30 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#0d1c2d] border border-[#273647] flex items-center justify-center shrink-0">
+              <targetTabInfo.icon className={`w-4 h-4 ${targetTabInfo.color}`} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-mono text-[#c6c6cd] uppercase">Target Page Access</div>
+              <div className="text-xs font-mono font-bold text-[#d4e4fa] truncate">
+                Sign in to view <span className={targetTabInfo.color}>{targetTabInfo.name}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Role Indicator / Mode Controls */}
         {authMode === 'forgot_password' ? (
