@@ -33,7 +33,7 @@ import { ActiveTab } from '../types';
 
 interface FooterProps {
   setActiveTab: (tab: ActiveTab) => void;
-  onOpenAuthModal: (role?: 'admin' | 'user', mode?: 'login' | 'signup') => void;
+  onOpenAuthModal: () => void;
   onOpenSubmissionModal?: (type?: 'publication' | 'blog' | 'gallery' | 'collaboration') => void;
 }
 
@@ -379,13 +379,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
                     <FileText className="w-3.5 h-3.5 text-[#ffc640]/70 group-hover:text-[#ffc640] transition-colors shrink-0" />
                     <span>Publications & Patents</span>
                   </span>
-                  {(!user || user.isAnonymous) ? (
-                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
-                      <Lock className="w-2.5 h-2.5" />
-                    </span>
-                  ) : (
-                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#ffc640] group-hover:translate-x-0.5 transition-all" />
-                  )}
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#ffc640] group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               <li>
@@ -397,13 +391,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
                     <BookOpen className="w-3.5 h-3.5 text-[#2fd9f4]/70 group-hover:text-[#2fd9f4] transition-colors shrink-0" />
                     <span>Laboratory Logs & Preprints</span>
                   </span>
-                  {(!user || user.isAnonymous) ? (
-                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
-                      <Lock className="w-2.5 h-2.5" />
-                    </span>
-                  ) : (
-                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#2fd9f4] group-hover:translate-x-0.5 transition-all" />
-                  )}
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-[#2fd9f4] group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               <li>
@@ -415,13 +403,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
                     <Image className="w-3.5 h-3.5 text-purple-400/70 group-hover:text-purple-400 transition-colors shrink-0" />
                     <span>Micrograph & Material Gallery</span>
                   </span>
-                  {(!user || user.isAnonymous) ? (
-                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
-                      <Lock className="w-2.5 h-2.5" />
-                    </span>
-                  ) : (
-                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
-                  )}
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               <li>
@@ -433,13 +415,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
                     <Activity className="w-3.5 h-3.5 text-emerald-400/70 group-hover:text-emerald-400 transition-colors shrink-0" />
                     <span>Scientometrics & Analytics</span>
                   </span>
-                  {(!user || user.isAnonymous) ? (
-                    <span title="Login required" className="text-[10px] text-amber-400/80 flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-500/20">
-                      <Lock className="w-2.5 h-2.5" />
-                    </span>
-                  ) : (
-                    <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
-                  )}
+                  <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
                 </button>
               </li>
               <li>
@@ -521,7 +497,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
               ) : (
                 <div className="space-y-2">
                   <button
-                    onClick={() => onOpenAuthModal('admin', 'login')}
+                    onClick={onOpenAuthModal}
                     className="w-full py-2.5 px-3.5 rounded-xl bg-[#ffc640]/15 hover:bg-[#ffc640]/25 text-[#ffc640] border border-[#ffc640]/50 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md group hover:border-[#ffc640]"
                   >
                     <Lock className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
@@ -544,7 +520,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal, o
             <span>Govt. of India Research Portal</span>
             <span className="text-[#1c2b3c]">•</span>
             <button
-              onClick={() => onOpenAuthModal('admin', 'login')}
+              onClick={onOpenAuthModal}
               className="text-[#ffc640] hover:underline flex items-center gap-1 font-semibold"
             >
               <KeyRound className="w-3 h-3" />

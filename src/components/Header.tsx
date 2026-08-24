@@ -6,17 +6,10 @@ import {
   Monitor,
   CheckCheck,
   ShieldCheck,
-  UserCheck,
-  User,
-  LogIn,
   LogOut,
   Mail,
   ChevronDown,
-  RefreshCw,
-  UserPlus,
-  X,
-  FilePlus2,
-  Database
+  X
 } from 'lucide-react';
 import { localDB, StorageState } from '../lib/db';
 import { notificationsEngine, InAppNotification } from '../lib/notifications';
@@ -29,7 +22,7 @@ interface HeaderProps {
   isMobileFrame: boolean;
   setIsMobileFrame: (val: boolean) => void;
   onOpenTaskModal: () => void;
-  onOpenAuthModal: (role?: 'admin' | 'user', mode?: 'login' | 'signup') => void;
+  onOpenAuthModal?: () => void;
   onOpenSubmissionModal?: (type?: 'publication' | 'blog' | 'gallery' | 'collaboration') => void;
 }
 
@@ -38,16 +31,14 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   isMobileFrame,
   setIsMobileFrame,
-  onOpenTaskModal,
-  onOpenAuthModal,
-  onOpenSubmissionModal
+  onOpenTaskModal: _onOpenTaskModal
 }) => {
   const [dbState, setDbState] = useState<StorageState>(localDB.getState());
   const [notifications, setNotifications] = useState<InAppNotification[]>(notificationsEngine.getNotifications());
   const [showNotifDrawer, setShowNotifDrawer] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const { user, isAdmin, logout, switchUserRole, loginDemoAdmin, loginDemoUser } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   useEffect(() => {
     const unsubDB = localDB.subscribe(setDbState);
@@ -95,30 +86,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Controls, User Auth, Notifications & Settings */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Researcher Submission Quick Button */}
-          {onOpenSubmissionModal && (
-            <button
-              onClick={() => onOpenSubmissionModal('publication')}
-              className="hidden md:flex items-center gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 font-bold transition-all shadow-sm"
-              title="Open Researcher Submission Portal (Supabase Form)"
-            >
-              <FilePlus2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Submit Research</span>
-            </button>
-          )}
-
-          {/* User / Admin Auth Section */}
-          <div className="relative flex items-center gap-1.5">
-            {(!user || user.isAnonymous) ? (
-              <button
-                onClick={() => onOpenAuthModal('user', 'login')}
-                className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg bg-[#2fd9f4]/15 hover:bg-[#2fd9f4]/25 text-[#2fd9f4] border border-[#2fd9f4]/40 font-bold transition-all shadow-sm"
-                title="Researcher Login / Register"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Researcher Login / Register</span>
-              </button>
-            ) : (
+          {/* Admin Auth Status Dropdown (only visible when authenticated) */}
+          {user && !user.isAnonymous && (
+            <div className="relative flex items-center gap-1.5">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className={`flex items-center gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-lg border transition-all ${
@@ -133,117 +103,71 @@ export const Header: React.FC<HeaderProps> = ({
                     alt={user.displayName || 'User'}
                     className="w-4 h-4 rounded-full object-cover"
                   />
-                ) : isAdmin ? (
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#ffc640]" />
                 ) : (
-                  <User className="w-3.5 h-3.5 text-[#2fd9f4]" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#ffc640]" />
                 )}
                 <span className="font-bold hidden sm:inline">
-                  {isAdmin ? 'ADMIN' : 'RESEARCHER'}
+                  {isAdmin ? 'ADMIN CMS' : 'AUTHENTICATED'}
                 </span>
                 <ChevronDown className="w-3 h-3 opacity-70" />
               </button>
-            )}
 
-            {/* Auth Dropdown Menu */}
-            {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-[#122131] border border-[#273647] shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 font-mono text-xs space-y-2.5">
-                <div className="pb-2 border-b border-[#273647]">
-                  <div className="font-bold text-[#d4e4fa] font-serif text-sm truncate">
-                    {user?.displayName || 'User Account'}
+              {/* Auth Dropdown Menu */}
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-[#122131] border border-[#273647] shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 font-mono text-xs space-y-2.5">
+                  <div className="pb-2 border-b border-[#273647]">
+                    <div className="font-bold text-[#d4e4fa] font-serif text-sm truncate">
+                      {user?.displayName || 'Admin Account'}
+                    </div>
+                    <div className="text-[11px] text-[#c6c6cd] truncate">{user?.email || 'Active session'}</div>
+                    <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#1c2b3c] text-[#ffc640]">
+                      Status: {isAdmin ? 'CMS ADMINISTRATOR' : 'LOGGED IN'}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-[#c6c6cd] truncate">{user?.email || 'Active session'}</div>
-                  <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#1c2b3c] text-[#ffc640]">
-                    Active: {isAdmin ? 'ADMIN (Full CMS)' : 'RESEARCHER (User)'}
-                  </div>
-                </div>
 
-                {/* Main User Options */}
-                <div className="space-y-1.5">
-                  {isAdmin ? (
-                    <>
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          setActiveTab('settings');
-                        }}
-                        className="w-full text-left px-2.5 py-2 rounded-lg bg-[#ffc640]/15 hover:bg-[#ffc640]/25 text-[#ffc640] border border-[#ffc640]/40 flex items-center justify-between transition-colors font-bold"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          CMS Management Hub
-                        </span>
-                        <ChevronDown className="w-3 h-3 -rotate-90" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          setActiveTab('home');
-                        }}
-                        className="w-full text-left px-2.5 py-1.5 rounded-lg bg-[#1c2b3c] hover:bg-[#273647] text-white flex items-center justify-between transition-colors text-[11px]"
-                      >
-                        <span>Edit Homepage Content</span>
-                      </button>
-                    </>
-                  ) : (
-                    /* Researcher Login / Register */
+                  {/* Main Options */}
+                  <div className="space-y-1.5">
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        onOpenAuthModal('user', 'login');
+                        setActiveTab('settings');
                       }}
-                      className="w-full text-left px-2.5 py-2 rounded-lg bg-[#2fd9f4]/10 hover:bg-[#2fd9f4]/20 text-[#2fd9f4] border border-[#2fd9f4]/30 flex items-center justify-between transition-colors"
+                      className="w-full text-left px-2.5 py-2 rounded-lg bg-[#ffc640]/15 hover:bg-[#ffc640]/25 text-[#ffc640] border border-[#ffc640]/40 flex items-center justify-between transition-colors font-bold"
                     >
-                      <span className="font-bold flex items-center gap-1.5">
-                        <UserCheck className="w-3.5 h-3.5" />
-                        Researcher Login / Register
+                      <span className="flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        CMS Management Hub
                       </span>
-                      <LogIn className="w-3 h-3" />
+                      <ChevronDown className="w-3 h-3 -rotate-90" />
                     </button>
-                  )}
 
-                  {/* Submit Research Form */}
-                  {onOpenSubmissionModal && (
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        onOpenSubmissionModal('publication');
+                        setActiveTab('home');
                       }}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center justify-between transition-colors"
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg bg-[#1c2b3c] hover:bg-[#273647] text-white flex items-center justify-between transition-colors text-[11px]"
                     >
-                      <span className="flex items-center gap-1.5 font-bold">
-                        <FilePlus2 className="w-3.5 h-3.5 text-emerald-400" />
-                        Submit Research (Supabase)
-                      </span>
+                      <span>View Public Website</span>
                     </button>
-                  )}
-                </div>
+                  </div>
 
-                <div className="pt-2 border-t border-[#273647] flex justify-between items-center text-[11px]">
-                  <button
-                    onClick={() => {
-                      switchUserRole(isAdmin ? 'user' : 'admin');
-                      setShowUserMenu(false);
-                    }}
-                    className="text-[#2fd9f4] hover:underline flex items-center gap-1"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>Quick Switch Role</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setShowUserMenu(false);
-                    }}
-                    className="text-red-400 hover:underline flex items-center gap-1"
-                  >
-                    <LogOut className="w-3 h-3" />
-                    <span>Sign Out</span>
-                  </button>
+                  <div className="pt-2 border-t border-[#273647] flex justify-end items-center text-[11px]">
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowUserMenu(false);
+                      }}
+                      className="text-red-400 hover:underline flex items-center gap-1"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Viewport Frame Switcher */}
           <button

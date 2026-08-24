@@ -50,7 +50,7 @@ export const PapersView: React.FC<PapersViewProps> = ({
   const [requestPurpose, setRequestPurpose] = useState('');
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-  const { user, isAdmin, loginDemoUser, loginDemoAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     return localDB.subscribe(setDbState);

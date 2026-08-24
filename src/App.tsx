@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { BottomNav } from './components/BottomNav';
@@ -9,7 +9,6 @@ import { BlogView } from './components/views/BlogView';
 import { GalleryView } from './components/views/GalleryView';
 import { SettingsView } from './components/views/SettingsView';
 import { AnalyticsDashboard } from './components/views/AnalyticsDashboard';
-import { RestrictedAccessGate } from './components/RestrictedAccessGate';
 
 import { ContactModal } from './components/modals/ContactModal';
 import { PaperModal } from './components/modals/PaperModal';
@@ -22,60 +21,17 @@ import { BlogPostModal } from './components/modals/BlogPostModal';
 import { GalleryItemModal } from './components/modals/GalleryItemModal';
 import { ResearcherSubmissionModal } from './components/modals/ResearcherSubmissionModal';
 
-import { useAuth } from './lib/AuthContext';
 import { ActiveTab, Publication, BlogPost, GalleryItem } from './types';
-
-const PROTECTED_TABS: ActiveTab[] = ['papers', 'blog', 'gallery', 'analytics'];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [pendingRedirectTab, setPendingRedirectTab] = useState<ActiveTab | null>(null);
   const [isMobileFrame, setIsMobileFrame] = useState(false);
-
-  const { user } = useAuth();
-  const isAuthenticated = !!user && !user.isAnonymous && user.uid !== 'guest-anon';
 
   // Modals
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [authModalConfig, setAuthModalConfig] = useState<{
-    isOpen: boolean;
-    initialRole?: 'admin' | 'user';
-    initialMode?: 'login' | 'signup';
-    targetTab?: ActiveTab | null;
-  }>({ isOpen: false, initialRole: 'user', initialMode: 'login', targetTab: null });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedPublication, setSelectedPublication] = useState<Publication | null>(null);
-
-  // Auto-redirect if user just signed in and was waiting for a protected tab
-  useEffect(() => {
-    if (isAuthenticated && pendingRedirectTab) {
-      setActiveTab(pendingRedirectTab);
-      setPendingRedirectTab(null);
-    }
-  }, [isAuthenticated, pendingRedirectTab]);
-
-  // Intercept navigation requests to protected tabs when unauthenticated
-  const handleTabNavigation = (target: ActiveTab) => {
-    if (PROTECTED_TABS.includes(target) && !isAuthenticated) {
-      setPendingRedirectTab(target);
-      setAuthModalConfig({
-        isOpen: true,
-        initialRole: 'user',
-        initialMode: 'login',
-        targetTab: target
-      });
-      setActiveTab(target);
-      return;
-    }
-    setActiveTab(target);
-  };
-
-  const handleAuthSuccess = (_role: 'admin' | 'user') => {
-    if (pendingRedirectTab) {
-      setActiveTab(pendingRedirectTab);
-      setPendingRedirectTab(null);
-    }
-  };
 
   // Researcher Submissions Modal
   const [submissionModalState, setSubmissionModalState] = useState<{
@@ -106,7 +62,7 @@ export default function App() {
       case 'home':
         return (
           <HomeView
-            setActiveTab={handleTabNavigation}
+            setActiveTab={setActiveTab}
             onOpenContactModal={() => setIsContactModalOpen(true)}
             onOpenEditProfileModal={() => setIsEditProfileOpen(true)}
             onOpenAddPaperModal={() => setPubModalState({ isOpen: true, pubToEdit: null })}
@@ -121,22 +77,6 @@ export default function App() {
           />
         );
       case 'papers':
-        if (!isAuthenticated) {
-          return (
-            <RestrictedAccessGate
-              targetTab="papers"
-              onOpenAuthModal={(role, mode) =>
-                setAuthModalConfig({
-                  isOpen: true,
-                  initialRole: role || 'user',
-                  initialMode: mode || 'login',
-                  targetTab: 'papers'
-                })
-              }
-              onGoHome={() => setActiveTab('home')}
-            />
-          );
-        }
         return (
           <PapersView
             onSelectPaper={(pub) => setSelectedPublication(pub)}
@@ -145,22 +85,6 @@ export default function App() {
           />
         );
       case 'blog':
-        if (!isAuthenticated) {
-          return (
-            <RestrictedAccessGate
-              targetTab="blog"
-              onOpenAuthModal={(role, mode) =>
-                setAuthModalConfig({
-                  isOpen: true,
-                  initialRole: role || 'user',
-                  initialMode: mode || 'login',
-                  targetTab: 'blog'
-                })
-              }
-              onGoHome={() => setActiveTab('home')}
-            />
-          );
-        }
         return (
           <BlogView
             onOpenAddPostModal={() => setBlogModalState({ isOpen: true, postToEdit: null })}
@@ -168,22 +92,6 @@ export default function App() {
           />
         );
       case 'gallery':
-        if (!isAuthenticated) {
-          return (
-            <RestrictedAccessGate
-              targetTab="gallery"
-              onOpenAuthModal={(role, mode) =>
-                setAuthModalConfig({
-                  isOpen: true,
-                  initialRole: role || 'user',
-                  initialMode: mode || 'login',
-                  targetTab: 'gallery'
-                })
-              }
-              onGoHome={() => setActiveTab('home')}
-            />
-          );
-        }
         return (
           <GalleryView
             onOpenAddGalleryModal={() => setGalleryModalState({ isOpen: true, itemToEdit: null })}
@@ -193,7 +101,7 @@ export default function App() {
       case 'settings':
         return (
           <SettingsView
-            setActiveTab={handleTabNavigation}
+            setActiveTab={setActiveTab}
             onOpenEditProfileModal={() => setIsEditProfileOpen(true)}
             onOpenAddPaperModal={() => setPubModalState({ isOpen: true, pubToEdit: null })}
             onOpenAddPostModal={() => setBlogModalState({ isOpen: true, postToEdit: null })}
@@ -204,27 +112,11 @@ export default function App() {
           />
         );
       case 'analytics':
-        if (!isAuthenticated) {
-          return (
-            <RestrictedAccessGate
-              targetTab="analytics"
-              onOpenAuthModal={(role, mode) =>
-                setAuthModalConfig({
-                  isOpen: true,
-                  initialRole: role || 'user',
-                  initialMode: mode || 'login',
-                  targetTab: 'analytics'
-                })
-              }
-              onGoHome={() => setActiveTab('home')}
-            />
-          );
-        }
         return <AnalyticsDashboard />;
       default:
         return (
           <HomeView
-            setActiveTab={handleTabNavigation}
+            setActiveTab={setActiveTab}
             onOpenContactModal={() => setIsContactModalOpen(true)}
             onOpenEditProfileModal={() => setIsEditProfileOpen(true)}
             onOpenAddPaperModal={() => setPubModalState({ isOpen: true, pubToEdit: null })}
@@ -247,18 +139,11 @@ export default function App() {
         {/* Header */}
         <Header
           activeTab={activeTab}
-          setActiveTab={handleTabNavigation}
+          setActiveTab={setActiveTab}
           isMobileFrame={isMobileFrame}
           setIsMobileFrame={setIsMobileFrame}
           onOpenTaskModal={() => setIsTaskModalOpen(true)}
-          onOpenAuthModal={(role, mode) =>
-            setAuthModalConfig({
-              isOpen: true,
-              initialRole: role || 'user',
-              initialMode: mode || 'login',
-              targetTab: null
-            })
-          }
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onOpenSubmissionModal={(type) =>
             setSubmissionModalState({ isOpen: true, initialType: type || 'publication' })
           }
@@ -271,22 +156,15 @@ export default function App() {
 
         {/* Global Footer with Admin Login & Portal */}
         <Footer
-          setActiveTab={handleTabNavigation}
-          onOpenAuthModal={(role, mode) =>
-            setAuthModalConfig({
-              isOpen: true,
-              initialRole: role || 'admin',
-              initialMode: mode || 'login',
-              targetTab: null
-            })
-          }
+          setActiveTab={setActiveTab}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onOpenSubmissionModal={(type) =>
             setSubmissionModalState({ isOpen: true, initialType: type || 'publication' })
           }
         />
 
         {/* Navigation Bar */}
-        <BottomNav activeTab={activeTab} setActiveTab={handleTabNavigation} />
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
 
       {/* Global Interactive Modals */}
@@ -294,18 +172,12 @@ export default function App() {
         isOpen={submissionModalState.isOpen}
         initialType={submissionModalState.initialType}
         onClose={() => setSubmissionModalState({ isOpen: false })}
-        onSubmissionSuccess={() => {
-          // If in settings or other tabs, notify
-        }}
+        onSubmissionSuccess={() => {}}
       />
 
       <AuthModal
-        isOpen={authModalConfig.isOpen}
-        initialRole={authModalConfig.initialRole}
-        initialMode={authModalConfig.initialMode}
-        targetTab={authModalConfig.targetTab}
-        onSuccess={handleAuthSuccess}
-        onClose={() => setAuthModalConfig(prev => ({ ...prev, isOpen: false, targetTab: null }))}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
 
       <ContactModal
@@ -349,4 +221,3 @@ export default function App() {
     </div>
   );
 }
-

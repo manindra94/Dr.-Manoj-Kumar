@@ -20,14 +20,9 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
-  signupWithEmail: (email: string, pass: string, name: string, role?: 'admin' | 'user') => Promise<void>;
-  loginWithGoogle: (rolePreference?: 'admin' | 'user') => Promise<void>;
-  loginAsGuest: () => Promise<void>;
-  loginDemoAdmin: () => Promise<void>;
-  loginDemoUser: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
-  switchUserRole: (newRole: 'admin' | 'user') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -219,137 +214,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Register new account with Email & Password
+   * 2. Login with Google Account (Admin verification via email)
    */
-  const signupWithEmail = async (email: string, pass: string, name: string, roleOverride?: 'admin' | 'user') => {
-    setLoading(true);
-    const cleanEmail = email.trim();
-    const role = roleOverride || (ADMIN_EMAILS.some(a => cleanEmail.toLowerCase().includes(a.toLowerCase())) ? 'admin' : 'user');
-
-    // Register with Supabase Auth as well
-    try {
-      supabase.auth.signUp({
-        email: cleanEmail,
-        password: pass,
-        options: { data: { displayName: name.trim(), role } }
-      }).catch((sErr) => {
-        console.warn('Supabase auth sign-up notice:', sErr?.message || sErr);
-      });
-    } catch {
-      // Non-blocking
-    }
-
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
-      if (name.trim()) {
-        await updateProfile(cred.user, { displayName: name.trim() });
-      }
-      const appUser = await syncUserProfile(cred.user, role);
-      setUser(appUser);
-      await firebaseService.logTelemetry(`New account registered: ${cleanEmail} (${role})`, 'auth', 'success');
-    } catch (err: any) {
-      console.error('Signup error:', err);
-      throw new Error(getFriendlyAuthErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * 2. Login with Google Account
-   */
-  const loginWithGoogle = async (rolePreference?: 'admin' | 'user') => {
+  const loginWithGoogle = async () => {
     setLoading(true);
     try {
       googleProvider.setCustomParameters({ prompt: 'select_account' });
       const cred = await signInWithPopup(auth, googleProvider);
-      const appUser = await syncUserProfile(cred.user, rolePreference);
+      const appUser = await syncUserProfile(cred.user);
       setUser(appUser);
-      await firebaseService.logTelemetry(`Google login successful: ${cred.user.email} (${appUser.role})`, 'auth', 'success');
+      await firebaseService.logTelemetry(`Google login: ${cred.user.email} (Role: ${appUser.role})`, 'auth', 'success');
     } catch (err: any) {
       console.error('Google sign-in error:', err);
       throw new Error(getFriendlyAuthErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Anonymous guest access
-   */
-  const loginAsGuest = async () => {
-    setLoading(true);
-    try {
-      const cred = await signInAnonymously(auth);
-      const appUser = await syncUserProfile(cred.user, 'user');
-      setUser(appUser);
-    } catch (err) {
-      console.warn('Anonymous login fallback:', err);
-      setUser({
-        uid: `guest-${Date.now()}`,
-        email: 'guest@csir-immt.res.in',
-        displayName: 'Guest Scholar',
-        photoURL: null,
-        role: 'user',
-        affiliation: 'Public Visitor',
-        isAnonymous: true
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Quick 1-Click Demo Admin Login (Dr. Manoj Kumar)
-   */
-  const loginDemoAdmin = async () => {
-    setLoading(true);
-    try {
-      try {
-        const cred = await signInWithEmailAndPassword(auth, 'admin@csir-immt.res.in', 'CsirAdmin@2025');
-        const appUser = await syncUserProfile(cred.user, 'admin');
-        setUser(appUser);
-      } catch {
-        try {
-          const cred = await createUserWithEmailAndPassword(auth, 'admin@csir-immt.res.in', 'CsirAdmin@2025');
-          await updateProfile(cred.user, { displayName: 'Dr. Manoj Kumar (Admin)' });
-          const appUser = await syncUserProfile(cred.user, 'admin');
-          setUser(appUser);
-        } catch {
-          // Local fallback
-          setUser({
-            uid: 'admin-manoj-kumar',
-            email: 'admin@csir-immt.res.in',
-            displayName: 'Dr. Manoj Kumar (Admin)',
-            photoURL: null,
-            role: 'admin',
-            affiliation: 'Senior Scientist, CSIR-IMMT',
-            isAnonymous: false
-          });
-        }
-      }
-      await firebaseService.logTelemetry('Logged in as Admin (Dr. Manoj Kumar)', 'auth', 'success');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Quick 1-Click Demo Researcher Login (Dr. Rahul Sharma)
-   */
-  const loginDemoUser = async () => {
-    setLoading(true);
-    try {
-      setUser({
-        uid: 'user-researcher-101',
-        email: 'researcher@csir-immt.res.in',
-        displayName: 'Dr. Rahul Sharma (Researcher)',
-        photoURL: null,
-        role: 'user',
-        affiliation: 'Research Fellow, Materials Engineering',
-        isAnonymous: false
-      });
-      await firebaseService.logTelemetry('Logged in as Standard Researcher User', 'auth', 'success');
     } finally {
       setLoading(false);
     }
@@ -367,7 +244,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // Sync password reset with Supabase if applicable
       try {
         supabase.auth.resetPasswordForEmail(cleanEmail).catch(() => {});
       } catch {
@@ -378,7 +254,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await firebaseService.logTelemetry(`Password reset requested for: ${cleanEmail}`, 'auth', 'warning');
     } catch (err: any) {
       console.error('Password reset error:', err);
-      // If offline/demo fallback mode or special admin handling
       if (cleanEmail.toLowerCase() === 'manindra94@gmail.com') {
         await firebaseService.logTelemetry('Password reset request simulated for Admin: Manindra94@gmail.com', 'auth', 'warning');
         return;
@@ -409,20 +284,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const switchUserRole = async (newRole: 'admin' | 'user') => {
-    if (!user) return;
-    const updated: AppUser = {
-      ...user,
-      role: newRole,
-      affiliation: newRole === 'admin' ? 'Senior Scientist, CSIR-IMMT' : 'Research Scholar / Reviewer'
-    };
-    setUser(updated);
-    if (rawUser) {
-      await syncUserProfile(rawUser, newRole);
-    }
-    await firebaseService.logTelemetry(`User role switched to: ${newRole.toUpperCase()}`, 'security', 'warning');
-  };
-
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -433,14 +294,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         isAdmin,
         loginWithEmail,
-        signupWithEmail,
         loginWithGoogle,
-        loginAsGuest,
-        loginDemoAdmin,
-        loginDemoUser,
         resetPassword,
-        logout,
-        switchUserRole
+        logout
       }}
     >
       {children}

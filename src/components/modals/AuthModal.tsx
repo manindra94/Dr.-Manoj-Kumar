@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   ShieldCheck,
-  UserCheck,
   Lock,
   Mail,
-  User,
   LogIn,
   Eye,
   EyeOff,
@@ -13,51 +11,34 @@ import {
   AlertCircle,
   RefreshCw,
   LogOut,
-  UserPlus,
   KeyRound,
-  ArrowLeft,
-  FileText,
-  BookOpen,
-  Image,
-  Activity
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
-import { ActiveTab } from '../../types';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialRole?: 'admin' | 'user';
-  initialMode?: 'login' | 'signup' | 'forgot_password';
-  targetTab?: ActiveTab | null;
-  onSuccess?: (role: 'admin' | 'user') => void;
+  onSuccess?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
-  initialRole = 'user',
-  initialMode = 'login',
-  targetTab = null,
   onSuccess
 }) => {
   const {
     user,
     isAdmin,
     loginWithEmail,
-    signupWithEmail,
     loginWithGoogle,
     resetPassword,
-    logout,
-    switchUserRole
+    logout
   } = useAuth();
 
-  const [selectedRole, setSelectedRole] = useState<'admin' | 'user'>(initialRole);
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot_password'>(initialMode);
-  
+  const [authMode, setAuthMode] = useState<'login' | 'forgot_password'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
   const [error, setError] = useState<string | null>(null);
@@ -67,31 +48,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedRole(initialRole);
-      setAuthMode(initialMode);
+      setAuthMode('login');
       setError(null);
       setSuccessMsg(null);
       setEmail('');
       setPassword('');
-      setDisplayName('');
     }
-  }, [isOpen, initialRole, initialMode]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const isAdminView = selectedRole === 'admin';
-
-  const targetTabInfo = targetTab
-    ? {
-        papers: { name: 'Publications & Patents Repository', icon: FileText, color: 'text-[#ffc640]' },
-        blog: { name: 'Laboratory Logs & Preprints', icon: BookOpen, color: 'text-[#2fd9f4]' },
-        gallery: { name: 'Micrographs & Material Gallery', icon: Image, color: 'text-[#a78bfa]' },
-        analytics: { name: 'Scientometrics & Impact Telemetry', icon: Activity, color: 'text-emerald-400' },
-        home: null,
-        about: null,
-        settings: null
-      }[targetTab]
-    : null;
 
   // Handle Email & Password / Forgot Password Submit
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -103,24 +68,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       if (authMode === 'forgot_password') {
         await resetPassword(email);
-        setSuccessMsg(`Password reset link sent to ${email}! Please check your email inbox or spam folder.`);
-      } else if (authMode === 'login') {
-        await loginWithEmail(email, password);
-        setSuccessMsg(`Authenticated successfully as ${selectedRole === 'admin' ? 'Administrator' : 'Researcher'}!`);
-        setTimeout(() => {
-          onSuccess?.(selectedRole);
-          onClose();
-        }, 800);
+        setSuccessMsg(`Password reset link sent to ${email}! Please check your inbox.`);
       } else {
-        await signupWithEmail(email, password, displayName, selectedRole);
-        setSuccessMsg(`Account registered successfully as ${selectedRole === 'admin' ? 'Administrator' : 'Researcher'}!`);
+        await loginWithEmail(email, password);
+        setSuccessMsg('Admin credentials authenticated successfully!');
         setTimeout(() => {
-          onSuccess?.(selectedRole);
+          onSuccess?.();
           onClose();
-        }, 800);
+        }, 700);
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication operation failed. Please try again.');
+      setError(err.message || 'Admin authentication failed. Please verify your credentials.');
     } finally {
       setIsSubmitting(false);
     }
@@ -133,12 +91,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsGoogleLoading(true);
 
     try {
-      await loginWithGoogle(selectedRole);
-      setSuccessMsg(`Signed in with Google as ${selectedRole === 'admin' ? 'Administrator' : 'Researcher'}!`);
+      await loginWithGoogle();
+      setSuccessMsg('Signed in with Google successfully!');
       setTimeout(() => {
-        onSuccess?.(selectedRole);
+        onSuccess?.();
         onClose();
-      }, 800);
+      }, 700);
     } catch (err: any) {
       setError(err.message || 'Google sign-in was cancelled or encountered an issue.');
     } finally {
@@ -148,7 +106,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className={`relative w-full max-w-md rounded-2xl bg-[#0d1c2d] border ${isAdminView ? 'border-[#ffc640]/50 shadow-[0_0_40px_rgba(255,198,64,0.15)]' : 'border-[#1c2b3c] shadow-2xl'} p-6 space-y-5 max-h-[90vh] overflow-y-auto`}>
+      <div className="relative w-full max-w-md rounded-2xl bg-[#0d1c2d] border border-[#ffc640]/50 shadow-[0_0_40px_rgba(255,198,64,0.15)] p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         {/* Header with Close */}
         <div className="flex items-center justify-between border-b border-[#1c2b3c] pb-3.5">
           <div>
@@ -156,26 +114,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {authMode === 'forgot_password' ? (
                 <>
                   <KeyRound className="w-5 h-5 text-[#ffc640]" />
-                  <span className="text-[#ffc640]">{isAdminView ? 'Admin Password Recovery' : 'Reset Password'}</span>
-                </>
-              ) : isAdminView ? (
-                <>
-                  <ShieldCheck className="w-5 h-5 text-[#ffc640]" />
-                  <span className="text-[#ffc640]">Administrative CMS Portal</span>
+                  <span className="text-[#ffc640]">Admin Password Recovery</span>
                 </>
               ) : (
                 <>
-                  <UserCheck className="w-5 h-5 text-[#2fd9f4]" />
-                  <span>{authMode === 'login' ? 'Researcher Sign In' : 'Researcher Registration'}</span>
+                  <ShieldCheck className="w-5 h-5 text-[#ffc640]" />
+                  <span className="text-[#ffc640]">Administrative CMS Sign In</span>
                 </>
               )}
             </h2>
             <p className="text-xs font-mono text-[#c6c6cd]">
               {authMode === 'forgot_password'
-                ? 'Send password reset instructions to your registered email'
-                : isAdminView
-                ? 'Central Administrator & Site Management Hub'
-                : 'CSIR-IMMT Laboratory & Research Portal'}
+                ? 'Send password reset instructions to your administrator email'
+                : 'Dr. Manoj Kumar / CSIR-IMMT Portfolio CMS Portal'}
             </p>
           </div>
           <button
@@ -186,99 +137,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Target Destination Banner */}
-        {targetTabInfo && (
-          <div className="p-3 rounded-xl bg-[#1c2b3c] border border-[#2fd9f4]/30 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#0d1c2d] border border-[#273647] flex items-center justify-center shrink-0">
-              <targetTabInfo.icon className={`w-4 h-4 ${targetTabInfo.color}`} />
+        {/* Security Notice */}
+        <div className="p-3 rounded-xl bg-[#ffc640]/10 border border-[#ffc640]/30 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#ffc640]">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Full Website Management Access</span>
             </div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-mono text-[#c6c6cd] uppercase">Target Page Access</div>
-              <div className="text-xs font-mono font-bold text-[#d4e4fa] truncate">
-                Sign in to view <span className={targetTabInfo.color}>{targetTabInfo.name}</span>
-              </div>
-            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#ffc640]/20 text-[#ffc640] border border-[#ffc640]/40 font-bold">
+              CMS ADMIN
+            </span>
           </div>
-        )}
-
-        {/* Role Indicator / Mode Controls */}
-        {authMode === 'forgot_password' ? (
-          <div className="p-3 rounded-xl bg-[#ffc640]/10 border border-[#ffc640]/30 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#ffc640]">
-                <KeyRound className="w-4 h-4" />
-                <span>Password Reset Verification</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('login');
-                  setError(null);
-                  setSuccessMsg(null);
-                }}
-                className="text-[10px] font-mono text-[#ffc640] hover:underline flex items-center gap-1"
-              >
-                <ArrowLeft className="w-3 h-3" />
-                <span>Back to Sign In</span>
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-              Enter your registered administrator or researcher email address below to receive password recovery and reset instructions.
-            </p>
-          </div>
-        ) : isAdminView ? (
-          <div className="p-3 rounded-xl bg-[#ffc640]/10 border border-[#ffc640]/30 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#ffc640]">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Full Website Management Access</span>
-              </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#ffc640]/20 text-[#ffc640] border border-[#ffc640]/40 font-bold">
-                CMS ADMIN
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-              Provides complete access to edit and manage Home, About, Papers, Blog, Gallery, Analytics, and Settings pages.
-            </p>
-          </div>
-        ) : (
-          /* Researcher Auth Mode Toggle (SIGN IN vs REGISTER) */
-          <div className="flex items-center justify-between p-1 rounded-xl bg-[#122131] border border-[#1c2b3c]">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('login');
-                setSelectedRole('user');
-                setError(null);
-              }}
-              className={`flex-1 py-2 rounded-lg font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                authMode === 'login'
-                  ? 'bg-[#2fd9f4] text-[#051424] shadow'
-                  : 'text-[#c6c6cd] hover:text-white'
-              }`}
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>SIGN IN</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('signup');
-                setSelectedRole('user');
-                setError(null);
-              }}
-              className={`flex-1 py-2 rounded-lg font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                authMode === 'signup'
-                  ? 'bg-[#2fd9f4] text-[#051424] shadow'
-                  : 'text-[#c6c6cd] hover:text-white'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>REGISTER</span>
-            </button>
-          </div>
-        )}
+          <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+            Authorized administrator credentials allow editing biography, publications, blogs, gallery items, scientometrics, and database settings.
+          </p>
+        </div>
 
         {/* Feedback Alerts */}
         {error && (
@@ -295,7 +168,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
         )}
 
-        {/* Method 1: Google Auth Button (only for login/signup) */}
+        {/* Method 1: Google Auth Button */}
         {authMode !== 'forgot_password' && (
           <div>
             <button
@@ -326,11 +199,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   />
                 </svg>
               )}
-              <span>
-                {authMode === 'login'
-                  ? `Login with Google (${selectedRole === 'admin' ? 'Admin' : 'Researcher'})`
-                  : `Register with Google (${selectedRole === 'admin' ? 'Admin' : 'Researcher'})`}
-              </span>
+              <span>Sign In with Google (Admin)</span>
             </button>
           </div>
         )}
@@ -340,33 +209,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="relative flex items-center justify-center my-2">
             <div className="border-t border-[#1c2b3c] w-full" />
             <span className="bg-[#0d1c2d] px-3 font-mono text-[10px] uppercase text-[#c6c6cd] absolute">
-              Or use Email & Password
+              Or with Admin Credentials
             </span>
           </div>
         )}
 
         {/* Method 2: Email & Password / Password Reset Form */}
         <form onSubmit={handleEmailAuth} className="space-y-3 font-mono text-xs">
-          {authMode === 'signup' && (
-            <div>
-              <label className="block text-[#c6c6cd] mb-1">FULL NAME</label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. Dr. Manoj Kumar / Scholar Name"
-                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-[#122131] border border-[#1c2b3c] focus:border-[#ffc640] text-[#d4e4fa] outline-none"
-                />
-              </div>
-            </div>
-          )}
-
           <div>
             <label className="block text-[#c6c6cd] mb-1">
-              {authMode === 'forgot_password' ? 'REGISTERED ADMIN / USER EMAIL' : 'EMAIL ADDRESS'}
+              ADMIN EMAIL ADDRESS
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -375,16 +227,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={
-                  selectedRole === 'admin'
-                    ? 'admin@csir-immt.res.in'
-                    : 'researcher@university.edu'
-                }
-                className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[#122131] border border-[#1c2b3c] text-[#d4e4fa] outline-none ${
-                  isAdminView || authMode === 'forgot_password'
-                    ? 'focus:border-[#ffc640]'
-                    : 'focus:border-[#2fd9f4]'
-                }`}
+                placeholder="manindra94@gmail.com / admin@csir-immt.res.in"
+                className="w-full pl-9 pr-3 py-2 rounded-lg bg-[#122131] border border-[#1c2b3c] focus:border-[#ffc640] text-[#d4e4fa] outline-none"
               />
             </div>
           </div>
@@ -393,20 +237,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[#c6c6cd]">PASSWORD</label>
-                {authMode === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode('forgot_password');
-                      setError(null);
-                      setSuccessMsg(null);
-                    }}
-                    className="text-[11px] text-[#ffc640] hover:underline font-mono flex items-center gap-1"
-                  >
-                    <KeyRound className="w-3 h-3" />
-                    <span>Forgot password?</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('forgot_password');
+                    setError(null);
+                    setSuccessMsg(null);
+                  }}
+                  className="text-[11px] text-[#ffc640] hover:underline font-mono flex items-center gap-1"
+                >
+                  <KeyRound className="w-3 h-3" />
+                  <span>Forgot password?</span>
+                </button>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -417,7 +259,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="•••••••• (min. 6 characters)"
-                  className="w-full pl-9 pr-9 py-2 rounded-lg bg-[#122131] border border-[#1c2b3c] focus:border-[#2fd9f4] text-[#d4e4fa] outline-none"
+                  className="w-full pl-9 pr-9 py-2 rounded-lg bg-[#122131] border border-[#1c2b3c] focus:border-[#ffc640] text-[#d4e4fa] outline-none"
                 />
                 <button
                   type="button"
@@ -433,107 +275,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={isSubmitting || isGoogleLoading}
-            className={`w-full py-2.5 rounded-xl font-bold font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-60 ${
-              isAdminView || authMode === 'forgot_password'
-                ? 'bg-[#ffc640] hover:bg-[#e3aa00] text-[#051424]'
-                : 'bg-[#2fd9f4] hover:bg-[#1ebcd4] text-[#051424]'
-            }`}
+            className="w-full py-2.5 rounded-xl font-bold font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg bg-[#ffc640] hover:bg-[#e3aa00] text-[#051424] transition-all disabled:opacity-60"
           >
             {isSubmitting ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : authMode === 'forgot_password' ? (
               <KeyRound className="w-4 h-4" />
-            ) : authMode === 'login' ? (
-              isAdminView ? <ShieldCheck className="w-4 h-4" /> : <LogIn className="w-4 h-4" />
             ) : (
-              <UserPlus className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4" />
             )}
             <span>
               {authMode === 'forgot_password'
                 ? 'Send Password Reset Link'
-                : authMode === 'login'
-                ? isAdminView
-                  ? 'Sign In as Administrator (Full Access)'
-                  : 'Sign In as Researcher'
-                : 'Create Researcher Account'}
+                : 'Sign In as Administrator'}
             </span>
           </button>
         </form>
 
-        {/* Portal & Register Access Helper */}
-        <div className="pt-2 border-t border-[#1c2b3c] flex items-center justify-between text-xs font-mono">
-          {authMode === 'forgot_password' ? (
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[#c6c6cd]">Remembered your password?</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('login');
-                  setError(null);
-                  setSuccessMsg(null);
-                }}
-                className="text-[#ffc640] hover:underline font-bold flex items-center gap-1"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Return to Sign In</span>
-              </button>
-            </div>
-          ) : isAdminView ? (
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[#c6c6cd]">Not an administrator?</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedRole('user');
-                  setAuthMode('login');
-                  setError(null);
-                }}
-                className="text-[#2fd9f4] hover:underline font-bold flex items-center gap-1"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Switch to Researcher Portal</span>
-              </button>
-            </div>
-          ) : authMode === 'login' ? (
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[#c6c6cd]">Not registered yet?</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('signup');
-                  setSelectedRole('user');
-                  setError(null);
-                }}
-                className="text-[#2fd9f4] hover:underline font-bold flex items-center gap-1"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>Register new account</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[#c6c6cd]">Already have an account?</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('login');
-                  setError(null);
-                }}
-                className="text-[#2fd9f4] hover:underline font-bold flex items-center gap-1"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Sign in here</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Back to Login link when in Forgot Password */}
+        {authMode === 'forgot_password' && (
+          <div className="pt-2 border-t border-[#1c2b3c] flex items-center justify-between text-xs font-mono">
+            <span className="text-[#c6c6cd]">Remembered your password?</span>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('login');
+                setError(null);
+                setSuccessMsg(null);
+              }}
+              className="text-[#ffc640] hover:underline font-bold flex items-center gap-1"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Sign In</span>
+            </button>
+          </div>
+        )}
 
         {/* Current Active Account Session Card (if signed in) */}
         {user && !user.isAnonymous && (
           <div className="p-3 rounded-xl bg-[#122131] border border-[#1c2b3c] flex items-center justify-between text-xs font-mono">
             <div className="truncate">
               <div className="text-[#d4e4fa] font-bold truncate">{user.displayName || user.email}</div>
-              <div className="text-[10px] text-[#c6c6cd]">Active Role: {isAdmin ? 'ADMIN' : 'RESEARCHER'}</div>
+              <div className="text-[10px] text-[#ffc640]">Status: {isAdmin ? 'ADMINISTRATOR' : 'AUTHENTICATED'}</div>
             </div>
             <button
               onClick={logout}

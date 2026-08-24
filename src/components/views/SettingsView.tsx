@@ -66,7 +66,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenResearcherSubmissionModal
 }) => {
   const [dbState, setDbState] = useState<StorageState>(localDB.getState());
-  const { user, isAdmin, logout, switchUserRole, loginDemoAdmin, loginDemoUser } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   const [activeSection, setActiveSection] = useState<
     'cms' | 'messages' | 'submissions' | 'supabase' | 'auth' | 'database' | 'security' | 'notifications' | 'preferences'
@@ -278,10 +278,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 ${
               isAdmin
                 ? 'bg-[#ffc640]/20 text-[#ffc640] border border-[#ffc640]/40'
-                : 'bg-[#2fd9f4]/20 text-[#2fd9f4] border border-[#2fd9f4]/40'
+                : 'bg-slate-800 text-slate-400 border border-slate-700'
             }`}>
               <ShieldCheck className="w-3.5 h-3.5" />
-              {isAdmin ? 'ADMIN ACCESS' : 'RESEARCHER MODE'}
+              {isAdmin ? 'ADMIN CMS ACTIVE' : 'READ ONLY VIEW'}
             </span>
           </div>
         </div>
@@ -291,7 +291,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </h1>
 
         <p className="text-xs sm:text-sm text-[#c6c6cd] leading-relaxed max-w-2xl font-sans">
-          Manage Firebase Firestore database synchronization, Home page content, About credentials, research papers, lab logs, gallery micrographs, incoming contact inquiries, and role permissions.
+          Manage Firebase Firestore database synchronization, Home page content, About credentials, research papers, lab logs, gallery micrographs, incoming contact inquiries, and CMS settings.
         </p>
       </section>
 
@@ -310,7 +310,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           { id: 'messages', label: `Inquiries (${unreadMessages})`, icon: Mail },
           { id: 'submissions', label: `Submissions Queue (${submissions.filter(s => s.status === 'pending').length})`, icon: Inbox },
           { id: 'supabase', label: 'Supabase Cloud DB', icon: Database },
-          { id: 'auth', label: 'User & Auth', icon: UserCheck },
+          { id: 'auth', label: 'Admin Auth & Access', icon: ShieldCheck },
           { id: 'database', label: 'Data & Storage', icon: Database },
           { id: 'security', label: 'Security & E2E', icon: ShieldCheck },
           { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -1027,12 +1027,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* TAB 3: USER & AUTH MANAGEMENT */}
+      {/* TAB 3: ADMIN AUTH & ACCESS */}
       {activeSection === 'auth' && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-[#122131] border border-[#1c2b3c] space-y-4 shadow-xl font-mono text-xs">
             <h2 className="text-lg font-serif font-bold text-[#d4e4fa] flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-[#2fd9f4]" />
-              <span>User & Role Management</span>
+              <ShieldCheck className="w-5 h-5 text-[#ffc640]" />
+              <span>Administrative CMS Authentication</span>
             </h2>
 
             <div className="p-4 rounded-xl bg-[#051424] border border-[#273647] space-y-3">
@@ -1044,41 +1045,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="text-[#c6c6cd]">{user?.email || 'manindra94@gmail.com'}</div>
                 </div>
                 <span className={`px-3 py-1 rounded text-xs font-bold uppercase ${
-                  isAdmin ? 'bg-[#ffc640]/20 text-[#ffc640] border border-[#ffc640]/40' : 'bg-[#2fd9f4]/20 text-[#2fd9f4] border border-[#2fd9f4]/40'
+                  isAdmin ? 'bg-[#ffc640]/20 text-[#ffc640] border border-[#ffc640]/40' : 'bg-slate-800 text-slate-400 border border-slate-700'
                 }`}>
-                  Active Role: {isAdmin ? 'ADMINISTRATOR' : 'RESEARCHER (USER)'}
+                  {isAdmin ? 'ADMINISTRATOR (CMS EDIT ACCESS)' : 'AUTHENTICATED'}
                 </span>
               </div>
 
-              <div className="pt-2 border-t border-[#273647] flex flex-wrap gap-2">
-                <button
-                  onClick={() => switchUserRole(isAdmin ? 'user' : 'admin')}
-                  className="px-4 py-2 rounded bg-[#1c2b3c] hover:bg-[#273647] text-[#2fd9f4] border border-[#273647] font-bold flex items-center gap-1.5"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Toggle to {isAdmin ? 'Researcher Mode' : 'Admin CMS'}</span>
-                </button>
+              <div className="pt-2 border-t border-[#273647] flex flex-wrap gap-2 items-center justify-between">
+                <p className="text-[11px] text-[#c6c6cd] font-sans">
+                  {isAdmin
+                    ? 'Your administrator session is active. You have full edit access across all papers, gallery, blog posts, and site settings.'
+                    : 'Sign in with your administrator credentials or Google Admin account to manage content.'}
+                </p>
 
-                <button
-                  onClick={loginDemoAdmin}
-                  className="px-4 py-2 rounded bg-[#ffc640] hover:bg-[#e3aa00] text-[#051424] font-bold"
-                >
-                  Login as Admin (Dr. Manoj Kumar)
-                </button>
-
-                <button
-                  onClick={loginDemoUser}
-                  className="px-4 py-2 rounded bg-[#051424] border border-[#2fd9f4] text-[#2fd9f4] font-bold hover:bg-[#1c2b3c]"
-                >
-                  Login as Researcher (User)
-                </button>
-
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 rounded bg-red-950/40 text-red-400 border border-red-800 font-bold"
-                >
-                  Sign Out
-                </button>
+                {user && !user.isAnonymous && (
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 rounded bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 border border-rose-800/50 font-bold"
+                  >
+                    Sign Out Administrator Session
+                  </button>
+                )}
               </div>
             </div>
           </div>
