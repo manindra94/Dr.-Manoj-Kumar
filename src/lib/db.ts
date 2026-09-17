@@ -202,6 +202,11 @@ export class LocalDatabaseEngine {
           this.state.messages = data.messages;
           hasChanges = true;
         }
+        if (data.telemetry && data.telemetry.length > 0) {
+          this.state.telemetry = data.telemetry;
+          this.setItem('telemetry', data.telemetry);
+          hasChanges = true;
+        }
 
         if (hasChanges) {
           this.addTelemetry('Connected to Express REST Backend API: all scientific datasets hydrated', 'sync', 'success');

@@ -13,7 +13,8 @@ import {
   MessageSquare,
   Filter,
   Layers,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 import { localDB, StorageState } from '../../lib/db';
 import { useAuth } from '../../lib/AuthContext';
@@ -22,19 +23,36 @@ import { GalleryItem } from '../../types';
 interface GalleryViewProps {
   onOpenAddGalleryModal?: () => void;
   onOpenEditGalleryModal?: (item: GalleryItem) => void;
+  initialSearchQuery?: string;
+  initialSelectedImage?: GalleryItem | null;
 }
 
 export const GalleryView: React.FC<GalleryViewProps> = ({
   onOpenAddGalleryModal,
-  onOpenEditGalleryModal
+  onOpenEditGalleryModal,
+  initialSearchQuery,
+  initialSelectedImage
 }) => {
   const [dbState, setDbState] = useState<StorageState>(localDB.getState());
-  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(initialSelectedImage || null);
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [noteItem, setNoteItem] = useState<GalleryItem | null>(null);
   const [galleryNote, setGalleryNote] = useState('');
 
   const { user, isAdmin } = useAuth();
+
+  useEffect(() => {
+    if (initialSearchQuery !== undefined) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
+
+  useEffect(() => {
+    if (initialSelectedImage) {
+      setSelectedImage(initialSelectedImage);
+    }
+  }, [initialSelectedImage]);
 
   useEffect(() => {
     return localDB.subscribe(setDbState);
@@ -60,8 +78,16 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
   const categories = ['All', ...Array.from(new Set(dbState.gallery.map((g) => g.category)))];
 
   const filteredGallery = dbState.gallery.filter((item) => {
-    if (activeCategory === 'All') return true;
-    return item.category === activeCategory;
+    const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+    if (!searchQuery.trim()) return matchesCategory;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      item.title.toLowerCase().includes(q) ||
+      (item.description && item.description.toLowerCase().includes(q)) ||
+      (item.category && item.category.toLowerCase().includes(q)) ||
+      (item.figureNo && item.figureNo.toLowerCase().includes(q)) ||
+      (item.scaleBar && item.scaleBar.toLowerCase().includes(q));
+    return matchesCategory && matchesSearch;
   });
 
   return (
@@ -71,7 +97,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#122131] border border-[#ffc640]/30 text-[#ffc640] font-mono text-xs font-semibold uppercase tracking-wider">
             <Award className="w-3.5 h-3.5" />
-            LABORATORY GALLERY ({dbState.gallery.length} FIGURES)
+            LABORATORY GALLERY ({(dbState.gallery || []).length} FIGURES)
           </div>
 
           <div className="flex items-center gap-2">
@@ -122,29 +148,65 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
         </div>
       </section>
 
-      {/* Category Filter Tabs */}
+      {/* Category Filter Tabs & Search */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-bold font-serif text-[#d4e4fa]">Research Gallery & Characterization</h2>
-          <div className="flex flex-wrap gap-2 font-mono text-xs">
-            {categories.map((cat) => (
+          <h2 className="text-2xl font-bold font-serif text-[#d4e4fa]">
+            Research Gallery & Characterization ({filteredGallery.length})
+          </h2>
+
+          <div className="relative w-full sm:w-72">
+            <Search className="w-3.5 h-3.5 text-[#2fd9f4] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter micrographs by title or keywords..."
+              className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-[#122131] border border-[#273647] text-xs text-[#d4e4fa] placeholder-slate-400 focus:border-[#2fd9f4] outline-none"
+            />
+            {searchQuery && (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg border transition-all ${
-                  activeCategory === cat
-                    ? 'bg-[#2fd9f4] text-[#051424] font-bold border-[#2fd9f4]'
-                    : 'bg-[#122131] text-[#c6c6cd] border-[#273647] hover:text-[#d4e4fa]'
-                }`}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
               >
-                {cat}
+                <X className="w-3 h-3" />
               </button>
-            ))}
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredGallery.map((item) => (
+        <div className="flex flex-wrap gap-2 font-mono text-xs">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-3 py-1.5 rounded-lg border transition-all ${
+                activeCategory === cat
+                  ? 'bg-[#2fd9f4] text-[#051424] font-bold border-[#2fd9f4]'
+                  : 'bg-[#122131] text-[#c6c6cd] border-[#273647] hover:text-[#d4e4fa]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {filteredGallery.length === 0 ? (
+          <div className="p-8 text-center bg-[#122131] border border-[#1c2b3c] rounded-2xl space-y-2">
+            <p className="text-sm text-slate-300 font-bold">No gallery items match your query</p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setActiveCategory('All');
+              }}
+              className="text-xs text-[#2fd9f4] underline font-mono"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredGallery.map((item) => (
             <div
               key={item.id}
               onClick={() => setSelectedImage(item)}
@@ -236,6 +298,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
             </div>
           ))}
         </div>
+      )}
       </section>
 
       {/* Lightbox Modal */}

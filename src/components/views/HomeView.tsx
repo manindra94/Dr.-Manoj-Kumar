@@ -38,7 +38,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     return localDB.subscribe(setDbState);
   }, []);
 
-  const { profile, publications, technicalVerticals, homepageContent } = dbState;
+  const { profile, publications = [], technicalVerticals = [], homepageContent } = dbState;
   const heroTagline = homepageContent?.heroTagline || profile.heroTagline;
   const heroDescription = homepageContent?.heroDescription || profile.heroDescription;
   const announcement = homepageContent?.announcement;

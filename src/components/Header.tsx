@@ -14,7 +14,8 @@ import {
 import { localDB, StorageState } from '../lib/db';
 import { notificationsEngine, InAppNotification } from '../lib/notifications';
 import { useAuth } from '../lib/AuthContext';
-import { ActiveTab } from '../types';
+import { ActiveTab, Publication, BlogPost, GalleryItem } from '../types';
+import { GlobalSearchBar } from './GlobalSearchBar';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -24,6 +25,10 @@ interface HeaderProps {
   onOpenTaskModal: () => void;
   onOpenAuthModal?: () => void;
   onOpenSubmissionModal?: (type?: 'publication' | 'blog' | 'gallery' | 'collaboration') => void;
+  onSelectPublication?: (pub: Publication) => void;
+  onSelectBlogPost?: (post: BlogPost) => void;
+  onSelectGalleryItem?: (item: GalleryItem) => void;
+  onViewAllInTab?: (tab: 'papers' | 'blog' | 'gallery', query: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,7 +36,11 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   isMobileFrame,
   setIsMobileFrame,
-  onOpenTaskModal: _onOpenTaskModal
+  onOpenTaskModal: _onOpenTaskModal,
+  onSelectPublication,
+  onSelectBlogPost,
+  onSelectGalleryItem,
+  onViewAllInTab
 }) => {
   const [dbState, setDbState] = useState<StorageState>(localDB.getState());
   const [notifications, setNotifications] = useState<InAppNotification[]>(notificationsEngine.getNotifications());
@@ -49,8 +58,8 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, []);
 
-  const unreadNotifCount = notifications.filter((n) => !n.read).length;
-  const unreadMessagesCount = dbState.messages ? dbState.messages.filter((m) => m.status === 'UNREAD').length : 0;
+  const unreadNotifCount = (notifications || []).filter((n) => !n.read).length;
+  const unreadMessagesCount = (dbState.messages || []).filter((m) => m.status === 'UNREAD').length;
 
   return (
     <header className="sticky top-0 z-40 bg-[#051424]/95 backdrop-blur-md border-b border-[#1c2b3c] px-3 sm:px-6 py-2.5 transition-colors duration-200">
@@ -62,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <div className="relative">
             <img
-              src={dbState.profile.avatarUrl}
+              src={dbState.profile?.avatarUrl}
               alt={dbState.profile.name}
               referrerPolicy="no-referrer"
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border-2 border-[#ffc640] group-hover:scale-105 transition-transform shadow-md"
@@ -83,6 +92,26 @@ export const Header: React.FC<HeaderProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Center: Global Search Bar */}
+        <GlobalSearchBar
+          onSelectPublication={(pub) => {
+            if (onSelectPublication) onSelectPublication(pub);
+            else setActiveTab('papers');
+          }}
+          onSelectBlogPost={(post) => {
+            if (onSelectBlogPost) onSelectBlogPost(post);
+            else setActiveTab('blog');
+          }}
+          onSelectGalleryItem={(item) => {
+            if (onSelectGalleryItem) onSelectGalleryItem(item);
+            else setActiveTab('gallery');
+          }}
+          onViewAllInTab={(tab, query) => {
+            if (onViewAllInTab) onViewAllInTab(tab, query);
+            else setActiveTab(tab);
+          }}
+        />
 
         {/* Right: Controls, User Auth, Notifications & Settings */}
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -248,10 +277,10 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
 
-                  {notifications.length === 0 ? (
+                  {(notifications || []).length === 0 ? (
                     <p className="text-xs text-slate-400 text-center py-4">No active system alerts</p>
                   ) : (
-                    notifications.map((n) => (
+                    (notifications || []).map((n) => (
                       <div
                         key={n.id}
                         className={`p-2.5 rounded-lg border text-xs transition-all ${

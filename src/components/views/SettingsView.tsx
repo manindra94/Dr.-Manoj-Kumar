@@ -409,7 +409,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-4 rounded-xl bg-[#051424] border border-[#273647] space-y-2">
                 <div className="flex items-center justify-between text-[#ffc640] font-bold">
                   <span className="flex items-center gap-1.5">
-                    <FileText className="w-4 h-4" /> PAPERS & PATENTS ({dbState.publications.length})
+                    <FileText className="w-4 h-4" /> PAPERS & PATENTS ({(dbState.publications || []).length})
                   </span>
                   <span className="text-[10px] bg-[#1c2b3c] px-2 py-0.5 rounded text-[#2fd9f4]">CMS</span>
                 </div>
@@ -438,7 +438,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-4 rounded-xl bg-[#051424] border border-[#273647] space-y-2">
                 <div className="flex items-center justify-between text-[#ffc640] font-bold">
                   <span className="flex items-center gap-1.5">
-                    <Activity className="w-4 h-4" /> BLOG & LAB LOGS ({dbState.blogPosts.length})
+                    <Activity className="w-4 h-4" /> BLOG & LAB LOGS ({(dbState.blogPosts || []).length})
                   </span>
                   <span className="text-[10px] bg-[#1c2b3c] px-2 py-0.5 rounded text-[#2fd9f4]">CMS</span>
                 </div>
@@ -467,7 +467,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-4 rounded-xl bg-[#051424] border border-[#273647] space-y-2">
                 <div className="flex items-center justify-between text-[#ffc640] font-bold">
                   <span className="flex items-center gap-1.5">
-                    <Image className="w-4 h-4" /> GALLERY MICROGRAPHS ({dbState.gallery.length})
+                    <Image className="w-4 h-4" /> GALLERY MICROGRAPHS ({(dbState.gallery || []).length})
                   </span>
                   <span className="text-[10px] bg-[#1c2b3c] px-2 py-0.5 rounded text-[#2fd9f4]">CMS</span>
                 </div>
@@ -843,11 +843,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Status Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                 {[
-                  { name: 'Publications', status: supabaseHealth.tables.publications, count: dbState.publications.length },
-                  { name: 'Lab Blog Posts', status: supabaseHealth.tables.blog_posts, count: dbState.blogPosts.length },
-                  { name: 'Gallery Items', status: supabaseHealth.tables.gallery_items, count: dbState.gallery.length },
-                  { name: 'Inquiries', status: supabaseHealth.tables.inquiries, count: dbState.messages.length },
-                  { name: 'Submissions', status: supabaseHealth.tables.researcher_submissions, count: submissions.length }
+                  { name: 'Publications', status: supabaseHealth.tables.publications, count: (dbState.publications || []).length },
+                  { name: 'Lab Blog Posts', status: supabaseHealth.tables.blog_posts, count: (dbState.blogPosts || []).length },
+                  { name: 'Gallery Items', status: supabaseHealth.tables.gallery_items, count: (dbState.gallery || []).length },
+                  { name: 'Inquiries', status: supabaseHealth.tables.inquiries, count: (dbState.messages || []).length },
+                  { name: 'Submissions', status: supabaseHealth.tables.researcher_submissions, count: (submissions || []).length }
                 ].map((item) => (
                   <div key={item.name} className="p-2.5 rounded-lg bg-[#122131] border border-[#273647] space-y-1">
                     <div className="text-slate-400 text-[10px] uppercase">{item.name}</div>
@@ -900,7 +900,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="flex items-center justify-between border-b border-[#1c2b3c] pb-2">
                 <h3 className="font-serif font-bold text-sm text-[#d4e4fa] flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-[#2fd9f4]" />
-                  <span>Manage Publications in Supabase ({dbState.publications.length})</span>
+                  <span>Manage Publications in Supabase ({(dbState.publications || []).length})</span>
                 </h3>
                 {onOpenAddPaperModal && (
                   <button
@@ -914,7 +914,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {dbState.publications.map((pub) => (
+                {(dbState.publications || []).map((pub) => (
                   <div
                     key={pub.id}
                     className="p-3 rounded-lg bg-[#051424] border border-[#273647] flex items-center justify-between gap-3 text-xs"
@@ -941,7 +941,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="flex items-center justify-between border-b border-[#1c2b3c] pb-2 pt-4">
                 <h3 className="font-serif font-bold text-sm text-[#d4e4fa] flex items-center gap-2">
                   <FileText className="w-4 h-4 text-[#ffc640]" />
-                  <span>Manage Lab Blog Posts in Supabase ({dbState.blogPosts.length})</span>
+                  <span>Manage Lab Blog Posts in Supabase ({(dbState.blogPosts || []).length})</span>
                 </h3>
                 {onOpenAddPostModal && (
                   <button
@@ -955,7 +955,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {dbState.blogPosts.map((post) => (
+                {(dbState.blogPosts || []).map((post) => (
                   <div
                     key={post.id}
                     className="p-3 rounded-lg bg-[#051424] border border-[#273647] flex items-center justify-between gap-3 text-xs"
@@ -982,7 +982,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="flex items-center justify-between border-b border-[#1c2b3c] pb-2 pt-4">
                 <h3 className="font-serif font-bold text-sm text-[#d4e4fa] flex items-center gap-2">
                   <Image className="w-4 h-4 text-purple-400" />
-                  <span>Manage Micrographs & Gallery in Supabase ({dbState.gallery.length})</span>
+                  <span>Manage Micrographs & Gallery in Supabase ({(dbState.gallery || []).length})</span>
                 </h3>
                 {onOpenAddGalleryModal && (
                   <button
@@ -996,7 +996,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {dbState.gallery.map((item) => (
+                {(dbState.gallery || []).map((item) => (
                   <div
                     key={item.id}
                     className="p-3 rounded-lg bg-[#051424] border border-[#273647] flex items-center justify-between gap-3 text-xs"
@@ -1118,17 +1118,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="p-3 rounded-xl bg-[#051424] border border-[#273647]">
                 <div className="text-slate-400">Publications in Cloud</div>
-                <div className="text-[#2fd9f4] font-bold mt-1">{dbState.publications.length} Records</div>
+                <div className="text-[#2fd9f4] font-bold mt-1">{(dbState.publications || []).length} Records</div>
               </div>
 
               <div className="p-3 rounded-xl bg-[#051424] border border-[#273647]">
                 <div className="text-slate-400">Blog Posts in Cloud</div>
-                <div className="text-[#ffc640] font-bold mt-1">{dbState.blogPosts.length} Records</div>
+                <div className="text-[#ffc640] font-bold mt-1">{(dbState.blogPosts || []).length} Records</div>
               </div>
 
               <div className="p-3 rounded-xl bg-[#051424] border border-[#273647]">
                 <div className="text-slate-400">Gallery Figures</div>
-                <div className="text-white font-bold mt-1">{dbState.gallery.length} Records</div>
+                <div className="text-white font-bold mt-1">{(dbState.gallery || []).length} Records</div>
               </div>
             </div>
 
@@ -1138,7 +1138,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 Database Telemetry Feed
               </h3>
               <div className="p-3 rounded-xl bg-[#051424] border border-[#273647] space-y-1.5 max-h-48 overflow-y-auto text-[11px]">
-                {dbState.telemetry.map((t) => (
+                {(dbState.telemetry || []).map((t) => (
                   <div key={t.id} className="flex items-center justify-between py-1 border-b border-[#1c2b3c]/50">
                     <span className="text-slate-400">[{t.timestamp}]</span>
                     <span className="text-[#d4e4fa] flex-1 px-2">{t.event}</span>

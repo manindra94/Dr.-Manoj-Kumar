@@ -15,7 +15,9 @@ import {
   MessageSquare,
   Send,
   User,
-  Share2
+  Share2,
+  Search,
+  X
 } from 'lucide-react';
 import { localDB, StorageState } from '../../lib/db';
 import { useAuth } from '../../lib/AuthContext';
@@ -24,13 +26,18 @@ import { BlogPost } from '../../types';
 interface BlogViewProps {
   onOpenAddPostModal?: () => void;
   onOpenEditPostModal?: (post: BlogPost) => void;
+  initialSearchQuery?: string;
+  selectedPostId?: string | null;
 }
 
 export const BlogView: React.FC<BlogViewProps> = ({
   onOpenAddPostModal,
-  onOpenEditPostModal
+  onOpenEditPostModal,
+  initialSearchQuery,
+  selectedPostId
 }) => {
   const [dbState, setDbState] = useState<StorageState>(localDB.getState());
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(dbState.blogPosts[0] || null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
@@ -39,12 +46,27 @@ export const BlogView: React.FC<BlogViewProps> = ({
   const { user, isAdmin } = useAuth();
 
   useEffect(() => {
+    if (initialSearchQuery !== undefined) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
+
+  useEffect(() => {
+    if (selectedPostId) {
+      const found = (dbState.blogPosts || []).find((p) => p.id === selectedPostId);
+      if (found) {
+        setSelectedPost(found);
+      }
+    }
+  }, [selectedPostId, dbState.blogPosts]);
+
+  useEffect(() => {
     return localDB.subscribe((state) => {
       setDbState(state);
       if (selectedPost) {
-        const updated = state.blogPosts.find((p) => p.id === selectedPost.id);
+        const updated = (state.blogPosts || []).find((p) => p.id === selectedPost.id);
         if (updated) setSelectedPost(updated);
-      } else if (state.blogPosts.length > 0) {
+      } else if ((state.blogPosts || []).length > 0) {
         setSelectedPost(state.blogPosts[0]);
       }
     });
@@ -90,6 +112,18 @@ export const BlogView: React.FC<BlogViewProps> = ({
     }
   };
 
+  const filteredBlogPosts = (dbState.blogPosts || []).filter((post) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      post.title.toLowerCase().includes(q) ||
+      post.excerpt.toLowerCase().includes(q) ||
+      post.content.toLowerCase().includes(q) ||
+      post.logCode.toLowerCase().includes(q) ||
+      (post.tags && post.tags.some((t) => t.toLowerCase().includes(q)))
+    );
+  });
+
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-300">
       {/* Header */}
@@ -97,7 +131,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#122131] border border-[#ffc640]/30 text-[#ffc640] font-mono text-xs font-semibold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-[#ffc640] animate-pulse" />
-            CSIR-IMMT LABORATORY LOGS ({dbState.blogPosts.length} POSTS)
+            CSIR-IMMT LABORATORY LOGS ({(dbState.blogPosts || []).length} POSTS)
           </div>
 
           <div className="flex items-center gap-2">
@@ -274,12 +308,44 @@ export const BlogView: React.FC<BlogViewProps> = ({
 
       {/* Grid of Other Laboratory Logs */}
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold font-serif text-[#d4e4fa]">
-          All Laboratory Logs & Briefs
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-bold font-serif text-[#d4e4fa]">
+            All Laboratory Logs & Briefs ({filteredBlogPosts.length})
+          </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {dbState.blogPosts.map((post) => (
+          <div className="relative w-full sm:w-72">
+            <Search className="w-3.5 h-3.5 text-[#ffc640] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter logs by title or keywords..."
+              className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-[#122131] border border-[#273647] text-xs text-[#d4e4fa] placeholder-slate-400 focus:border-[#ffc640] outline-none"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredBlogPosts.length === 0 ? (
+          <div className="p-8 text-center bg-[#122131] border border-[#1c2b3c] rounded-2xl space-y-2">
+            <p className="text-sm text-slate-300 font-bold">No lab logs match &ldquo;{searchQuery}&rdquo;</p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-xs text-[#ffc640] underline font-mono"
+            >
+              Clear filter
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredBlogPosts.map((post) => (
             <article
               key={post.id}
               onClick={() => setSelectedPost(post)}
@@ -343,6 +409,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
             </article>
           ))}
         </div>
+      )}
       </section>
 
       {/* Newsletter / Collaboration Subscription */}

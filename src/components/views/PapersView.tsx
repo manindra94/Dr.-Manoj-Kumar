@@ -30,15 +30,23 @@ interface PapersViewProps {
   onSelectPaper: (pub: Publication) => void;
   onOpenAddPaperModal: () => void;
   onOpenEditPaperModal: (pub: Publication) => void;
+  initialSearchQuery?: string;
 }
 
 export const PapersView: React.FC<PapersViewProps> = ({
   onSelectPaper,
   onOpenAddPaperModal,
-  onOpenEditPaperModal
+  onOpenEditPaperModal,
+  initialSearchQuery
 }) => {
   const [dbState, setDbState] = useState<StorageState>(localDB.getState());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '');
+
+  useEffect(() => {
+    if (initialSearchQuery !== undefined) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
   const [activeFilter, setActiveFilter] = useState<'All' | 'Journal' | 'Patent' | 'Conference' | 'Bookmarked'>('All');
   const [selectedPaperForNotes, setSelectedPaperForNotes] = useState<Publication | null>(null);
   const [noteText, setNoteText] = useState('');
@@ -140,7 +148,7 @@ export const PapersView: React.FC<PapersViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#122131] border border-[#2fd9f4]/30 text-[#2fd9f4] font-mono text-xs font-semibold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-[#2fd9f4] animate-pulse" />
-            PUBLICATIONS REPOSITORY ({dbState.publications.length} TOTAL)
+            PUBLICATIONS REPOSITORY ({(dbState.publications || []).length} TOTAL)
           </div>
 
           <div className="flex items-center gap-2">
@@ -547,19 +555,19 @@ export const PapersView: React.FC<PapersViewProps> = ({
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
         <div className="p-4 rounded-xl bg-[#122131] border border-[#1c2b3c]">
           <div className="text-2xl font-bold font-serif text-[#ffc640]">
-            {dbState.publications.reduce((acc, p) => acc + p.citations, 0)}
+            {(dbState.publications || []).reduce((acc, p) => acc + (p.citations || 0), 0)}
           </div>
           <div className="text-xs text-[#c6c6cd] uppercase mt-1">Total Citations</div>
         </div>
         <div className="p-4 rounded-xl bg-[#122131] border border-[#1c2b3c]">
           <div className="text-2xl font-bold font-serif text-[#2fd9f4]">
-            {dbState.publications.filter((p) => p.type === 'Journal').length}
+            {(dbState.publications || []).filter((p) => p.type === 'Journal').length}
           </div>
           <div className="text-xs text-[#c6c6cd] uppercase mt-1">Journal Papers</div>
         </div>
         <div className="p-4 rounded-xl bg-[#122131] border border-[#1c2b3c]">
           <div className="text-2xl font-bold font-serif text-[#ffc640]">
-            {dbState.publications.filter((p) => p.type === 'Patent').length}
+            {(dbState.publications || []).filter((p) => p.type === 'Patent').length}
           </div>
           <div className="text-xs text-[#c6c6cd] uppercase mt-1">Industrial Patents</div>
         </div>

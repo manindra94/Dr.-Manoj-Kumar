@@ -134,9 +134,9 @@ export const TaskReminderModal: React.FC<TaskReminderModalProps> = ({ isOpen, on
 
         {/* Existing Active Reminders */}
         <div className="space-y-2 pt-2 border-t border-[#273647]">
-          <h3 className="text-xs font-mono text-[#d4e4fa] font-bold">Active Scheduled Tasks ({dbState.tasks.length})</h3>
+          <h3 className="text-xs font-mono text-[#d4e4fa] font-bold">Active Scheduled Tasks ({(dbState.tasks || []).length})</h3>
           <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 font-mono text-[11px]">
-            {dbState.tasks.map((task) => (
+            {(dbState.tasks || []).map((task) => (
               <div
                 key={task.id}
                 onClick={() => localDB.toggleTaskCompletion(task.id)}

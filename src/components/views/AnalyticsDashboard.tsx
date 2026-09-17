@@ -61,8 +61,8 @@ export const AnalyticsDashboard: React.FC = () => {
     return localDB.subscribe(setDbState);
   }, []);
 
-  const totalCitations = dbState.publications.reduce((acc, p) => acc + (p.citations || 0), 0);
-  const totalPapers = dbState.publications.length;
+  const totalCitations = (dbState.publications || []).reduce((acc, p) => acc + (p.citations || 0), 0);
+  const totalPapers = (dbState.publications || []).length;
 
   const dynamicCitationTrends = [
     { year: '2020', citations: 120, papers: 4 },
@@ -492,18 +492,18 @@ export const AnalyticsDashboard: React.FC = () => {
             <Terminal className="w-4 h-4 text-[#ffc640]" />
             <span>System & Telemetry Audit Stream</span>
           </h2>
-          <span className="text-[11px] text-[#2fd9f4]">{dbState.telemetryLogs.length} Events</span>
+          <span className="text-[11px] text-[#2fd9f4]">{(dbState.telemetry || []).length} Events</span>
         </div>
 
         <div className="p-3 rounded-xl bg-[#051424] border border-[#273647] max-h-48 overflow-y-auto space-y-2 text-xs">
-          {dbState.telemetryLogs.length === 0 ? (
+          {(!dbState.telemetry || dbState.telemetry.length === 0) ? (
             <div className="text-slate-500 text-center py-2">No telemetry events logged yet.</div>
           ) : (
-            dbState.telemetryLogs.map((log) => (
+            dbState.telemetry.map((log) => (
               <div key={log.id} className="flex items-start gap-2 text-slate-300">
                 <span className="text-[#2fd9f4] shrink-0">[{log.timestamp}]</span>
-                <span className="text-[#ffc640] uppercase shrink-0">[{log.category}]</span>
-                <span className="text-[#d4e4fa]">{log.action}</span>
+                <span className="text-[#ffc640] uppercase shrink-0">[{log.category || log.type || 'SYSTEM'}]</span>
+                <span className="text-[#d4e4fa]">{log.action || log.event}</span>
               </div>
             ))
           )}

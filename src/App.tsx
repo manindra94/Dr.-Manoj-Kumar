@@ -42,6 +42,13 @@ export default function App() {
   // Dynamic Content Modals
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
+  // Search filtering state across tabs
+  const [searchQueryForPapers, setSearchQueryForPapers] = useState<string>('');
+  const [searchQueryForBlog, setSearchQueryForBlog] = useState<string>('');
+  const [selectedBlogPostId, setSelectedBlogPostId] = useState<string | null>(null);
+  const [searchQueryForGallery, setSearchQueryForGallery] = useState<string>('');
+  const [selectedGalleryItem, setSelectedGalleryItem] = useState<GalleryItem | null>(null);
+
   const [pubModalState, setPubModalState] = useState<{
     isOpen: boolean;
     pubToEdit: Publication | null;
@@ -82,6 +89,7 @@ export default function App() {
             onSelectPaper={(pub) => setSelectedPublication(pub)}
             onOpenAddPaperModal={() => setPubModalState({ isOpen: true, pubToEdit: null })}
             onOpenEditPaperModal={(pub) => setPubModalState({ isOpen: true, pubToEdit: pub })}
+            initialSearchQuery={searchQueryForPapers}
           />
         );
       case 'blog':
@@ -89,6 +97,8 @@ export default function App() {
           <BlogView
             onOpenAddPostModal={() => setBlogModalState({ isOpen: true, postToEdit: null })}
             onOpenEditPostModal={(post) => setBlogModalState({ isOpen: true, postToEdit: post })}
+            initialSearchQuery={searchQueryForBlog}
+            selectedPostId={selectedBlogPostId}
           />
         );
       case 'gallery':
@@ -96,6 +106,8 @@ export default function App() {
           <GalleryView
             onOpenAddGalleryModal={() => setGalleryModalState({ isOpen: true, itemToEdit: null })}
             onOpenEditGalleryModal={(item) => setGalleryModalState({ isOpen: true, itemToEdit: item })}
+            initialSearchQuery={searchQueryForGallery}
+            initialSelectedImage={selectedGalleryItem}
           />
         );
       case 'settings':
@@ -147,6 +159,30 @@ export default function App() {
           onOpenSubmissionModal={(type) =>
             setSubmissionModalState({ isOpen: true, initialType: type || 'publication' })
           }
+          onSelectPublication={(pub) => {
+            setSelectedPublication(pub);
+            setActiveTab('papers');
+          }}
+          onSelectBlogPost={(post) => {
+            setSelectedBlogPostId(post.id);
+            setActiveTab('blog');
+          }}
+          onSelectGalleryItem={(item) => {
+            setSelectedGalleryItem(item);
+            setActiveTab('gallery');
+          }}
+          onViewAllInTab={(tab, query) => {
+            if (tab === 'papers') {
+              setSearchQueryForPapers(query);
+              setActiveTab('papers');
+            } else if (tab === 'blog') {
+              setSearchQueryForBlog(query);
+              setActiveTab('blog');
+            } else if (tab === 'gallery') {
+              setSearchQueryForGallery(query);
+              setActiveTab('gallery');
+            }
+          }}
         />
 
         {/* Main Content Area */}
