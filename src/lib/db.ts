@@ -26,6 +26,7 @@ import {
 import { firebaseService, AnalyticsData, DEFAULT_ANALYTICS, ContactMessage } from './firebaseService';
 import { supabaseService } from './supabaseService';
 import { SUPABASE_PROJECT_ID } from './supabase';
+import { portfolioApi } from './api';
 
 const DB_PREFIX = 'immmt_db_v1_';
 
@@ -124,6 +125,92 @@ export class LocalDatabaseEngine {
 
     // Initialize sync and data hydration from Supabase backend
     this.initSupabaseSync();
+
+    // Initialize sync and data hydration from Express REST Backend API
+    this.initBackendApiSync();
+  }
+
+  private async initBackendApiSync() {
+    try {
+      const data = await portfolioApi.getBootstrap();
+      if (data) {
+        let hasChanges = false;
+        if (data.profile) {
+          this.state.profile = { ...this.state.profile, ...data.profile };
+          this.setItem('profile', this.state.profile);
+          hasChanges = true;
+        }
+        if (data.homepageContent) {
+          this.state.homepageContent = {
+            heroTagline: data.homepageContent.heroTagline || this.state.homepageContent.heroTagline,
+            heroDescription: data.homepageContent.heroDescription || this.state.homepageContent.heroDescription,
+            announcement: data.homepageContent.announcement || this.state.homepageContent.announcement
+          };
+          hasChanges = true;
+        }
+        if (data.technicalVerticals && data.technicalVerticals.length > 0) {
+          this.state.technicalVerticals = data.technicalVerticals;
+          this.setItem('technicalVerticals', data.technicalVerticals);
+          hasChanges = true;
+        }
+        if (data.publications && data.publications.length > 0) {
+          this.state.publications = data.publications;
+          this.setItem('publications', data.publications);
+          hasChanges = true;
+        }
+        if (data.blogPosts && data.blogPosts.length > 0) {
+          this.state.blogPosts = data.blogPosts;
+          this.setItem('blogPosts', data.blogPosts);
+          hasChanges = true;
+        }
+        if (data.gallery && data.gallery.length > 0) {
+          this.state.gallery = data.gallery;
+          this.setItem('gallery', data.gallery);
+          hasChanges = true;
+        }
+        if (data.careerJourney && data.careerJourney.length > 0) {
+          this.state.careerJourney = data.careerJourney;
+          this.setItem('careerJourney', data.careerJourney);
+          hasChanges = true;
+        }
+        if (data.academicFoundation && data.academicFoundation.length > 0) {
+          this.state.academicFoundation = data.academicFoundation;
+          this.setItem('academicFoundation', data.academicFoundation);
+          hasChanges = true;
+        }
+        if (data.awards && data.awards.length > 0) {
+          this.state.awards = data.awards;
+          this.setItem('awards', data.awards);
+          hasChanges = true;
+        }
+        if (data.tasks && data.tasks.length > 0) {
+          this.state.tasks = data.tasks;
+          this.setItem('tasks', data.tasks);
+          hasChanges = true;
+        }
+        if (data.settings) {
+          this.state.settings = { ...this.state.settings, ...data.settings };
+          this.setItem('settings', this.state.settings);
+          hasChanges = true;
+        }
+        if (data.analytics) {
+          this.state.analytics = { ...this.state.analytics, ...data.analytics };
+          this.setItem('analytics', this.state.analytics);
+          hasChanges = true;
+        }
+        if (data.messages && data.messages.length > 0) {
+          this.state.messages = data.messages;
+          hasChanges = true;
+        }
+
+        if (hasChanges) {
+          this.addTelemetry('Connected to Express REST Backend API: all scientific datasets hydrated', 'sync', 'success');
+          this.notify();
+        }
+      }
+    } catch (err) {
+      console.warn('Backend REST API bootstrap notice (using local cache or server initializing):', err);
+    }
   }
 
   private async initSupabaseSync() {
@@ -441,6 +528,9 @@ export class LocalDatabaseEngine {
     this.setItem('profile', this.state.profile);
     this.notify();
 
+    // Sync to Express Backend REST API
+    portfolioApi.updateProfile(this.state.profile).catch((err) => console.warn('API profile update:', err));
+
     try {
       await firebaseService.updateProfile(this.state.profile);
       await firebaseService.logTelemetry('Profile updated in Firebase Firestore', 'system', 'success');
@@ -456,6 +546,13 @@ export class LocalDatabaseEngine {
       ...partial
     };
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.updateHomepage({
+      heroTagline: this.state.homepageContent.heroTagline,
+      heroDescription: this.state.homepageContent.heroDescription,
+      announcement: this.state.homepageContent.announcement
+    }).catch((err) => console.warn('API homepage update:', err));
 
     try {
       await firebaseService.updateHomePage({
@@ -476,6 +573,9 @@ export class LocalDatabaseEngine {
     this.setItem('technicalVerticals', verticals);
     this.notify();
 
+    // Sync to Express Backend REST API
+    portfolioApi.updateTechnicalVerticals(verticals).catch((err) => console.warn('API verticals update:', err));
+
     try {
       await firebaseService.updateHomePage({ featuredVerticals: verticals });
     } catch (err) {
@@ -490,6 +590,9 @@ export class LocalDatabaseEngine {
     this.state.publications = [newPub, ...this.state.publications];
     this.setItem('publications', this.state.publications);
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.addPublication(newPub).catch((err) => console.warn('API pub add:', err));
 
     // Sync to Supabase in background
     supabaseService.insertPublication(newPub).catch((err) => console.warn('Supabase pub add:', err));
@@ -511,6 +614,9 @@ export class LocalDatabaseEngine {
     this.setItem('publications', this.state.publications);
     this.notify();
 
+    // Sync to Express Backend REST API
+    portfolioApi.updatePublication(id, partial).catch((err) => console.warn('API pub update:', err));
+
     const updated = this.state.publications.find((p) => p.id === id);
     if (updated) {
       supabaseService.insertPublication(updated).catch((err) => console.warn('Supabase pub update:', err));
@@ -528,6 +634,9 @@ export class LocalDatabaseEngine {
     this.state.publications = this.state.publications.filter((p) => p.id !== id);
     this.setItem('publications', this.state.publications);
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.deletePublication(id).catch((err) => console.warn('API pub delete:', err));
 
     // Delete from Supabase
     supabaseService.deletePublication(id).catch((err) => console.warn('Supabase pub delete:', err));
@@ -561,6 +670,8 @@ export class LocalDatabaseEngine {
     });
     this.setItem('publications', this.state.publications);
     this.notify();
+
+    portfolioApi.setPublicationNote(pubId, note).catch((err) => console.warn('API pub note update:', err));
   }
 
   // --- Dynamic Blog Posts CRUD ---
@@ -570,6 +681,9 @@ export class LocalDatabaseEngine {
     this.state.blogPosts = [newPost, ...this.state.blogPosts];
     this.setItem('blogPosts', this.state.blogPosts);
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.addBlogPost(newPost).catch((err) => console.warn('API blog add:', err));
 
     // Sync to Supabase
     supabaseService.insertBlogPost(newPost).catch((err) => console.warn('Supabase blog add:', err));
@@ -591,6 +705,9 @@ export class LocalDatabaseEngine {
     this.setItem('blogPosts', this.state.blogPosts);
     this.notify();
 
+    // Sync to Express Backend REST API
+    portfolioApi.updateBlogPost(id, partial).catch((err) => console.warn('API blog update:', err));
+
     const updated = this.state.blogPosts.find((b) => b.id === id);
     if (updated) {
       supabaseService.insertBlogPost(updated).catch((err) => console.warn('Supabase blog update:', err));
@@ -608,6 +725,9 @@ export class LocalDatabaseEngine {
     this.state.blogPosts = this.state.blogPosts.filter((b) => b.id !== id);
     this.setItem('blogPosts', this.state.blogPosts);
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.deleteBlogPost(id).catch((err) => console.warn('API blog delete:', err));
 
     // Delete from Supabase
     supabaseService.deleteBlogPost(id).catch((err) => console.warn('Supabase blog delete:', err));
@@ -644,6 +764,8 @@ export class LocalDatabaseEngine {
     });
     this.setItem('blogPosts', this.state.blogPosts);
     this.notify();
+
+    portfolioApi.likeBlogPost(postId, userId).catch((err) => console.warn('API blog like:', err));
   }
 
   public addBlogComment(postId: string, comment: any) {
@@ -674,6 +796,8 @@ export class LocalDatabaseEngine {
     this.setItem('blogPosts', this.state.blogPosts);
     this.notify();
     this.addTelemetry(`New peer comment added to log ${postId} by ${author}`, 'system', 'success');
+
+    portfolioApi.addBlogComment(postId, newComment).catch((err) => console.warn('API blog comment:', err));
   }
 
   // --- Dynamic Gallery CRUD ---
@@ -683,6 +807,9 @@ export class LocalDatabaseEngine {
     this.state.gallery = [newItem, ...this.state.gallery];
     this.setItem('gallery', this.state.gallery);
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.addGalleryItem(newItem).catch((err) => console.warn('API gallery add:', err));
 
     // Sync to Supabase
     supabaseService.insertGalleryItem(newItem).catch((err) => console.warn('Supabase gallery add:', err));
@@ -704,6 +831,9 @@ export class LocalDatabaseEngine {
     this.setItem('gallery', this.state.gallery);
     this.notify();
 
+    // Sync to Express Backend REST API
+    portfolioApi.updateGalleryItem(id, partial).catch((err) => console.warn('API gallery update:', err));
+
     const updated = this.state.gallery.find((g) => g.id === id);
     if (updated) {
       supabaseService.insertGalleryItem(updated).catch((err) => console.warn('Supabase gallery update:', err));
@@ -720,6 +850,9 @@ export class LocalDatabaseEngine {
     this.state.gallery = this.state.gallery.filter((g) => g.id !== id);
     this.setItem('gallery', this.state.gallery);
     this.notify();
+
+    // Sync to Express Backend REST API
+    portfolioApi.deleteGalleryItem(id).catch((err) => console.warn('API gallery delete:', err));
 
     // Delete from Supabase
     supabaseService.deleteGalleryItem(id).catch((err) => console.warn('Supabase gallery delete:', err));
@@ -752,6 +885,8 @@ export class LocalDatabaseEngine {
     });
     this.setItem('gallery', this.state.gallery);
     this.notify();
+
+    portfolioApi.setGalleryNote(itemId, note).catch((err) => console.warn('API gallery note update:', err));
   }
 
   public submitDatasetRequest(request: any) {
@@ -887,6 +1022,9 @@ export class LocalDatabaseEngine {
     this.state.analytics = { ...this.state.analytics, ...partial };
     this.setItem('analytics', this.state.analytics);
     this.notify();
+
+    portfolioApi.updateAnalytics(partial).catch((err) => console.warn('API analytics update:', err));
+
     try {
       await firebaseService.updateAnalytics(partial);
       await firebaseService.logTelemetry('Analytics metrics updated in Firebase', 'system', 'success');
@@ -900,6 +1038,9 @@ export class LocalDatabaseEngine {
     this.state.settings = { ...this.state.settings, ...partial };
     this.setItem('settings', this.state.settings);
     this.notify();
+
+    portfolioApi.updateSettings(partial).catch((err) => console.warn('API settings update:', err));
+
     try {
       await firebaseService.updateSettings(partial);
       await firebaseService.logTelemetry('System settings updated in Firebase Firestore', 'system', 'success');
@@ -914,6 +1055,9 @@ export class LocalDatabaseEngine {
   }
 
   public async sendContactMessage(msg: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) {
+    // Sync to Express Backend REST API
+    portfolioApi.sendMessage(msg).catch((err) => console.warn('API message send:', err));
+
     // Sync to Supabase inquiries table
     const tempMsg: ContactMessage = {
       id: `msg-${Date.now()}`,
@@ -946,6 +1090,9 @@ export class LocalDatabaseEngine {
   public async updateMessageStatus(id: string, status: 'UNREAD' | 'REVIEWED' | 'ARCHIVED') {
     this.state.messages = this.state.messages.map((m) => m.id === id ? { ...m, status } : m);
     this.notify();
+
+    portfolioApi.updateMessageStatus(id, status).catch((err) => console.warn('API message status update:', err));
+
     try {
       await firebaseService.updateMessageStatus(id, status);
     } catch (err) {
@@ -956,6 +1103,9 @@ export class LocalDatabaseEngine {
   public async deleteMessage(id: string) {
     this.state.messages = this.state.messages.filter((m) => m.id !== id);
     this.notify();
+
+    portfolioApi.deleteMessage(id).catch((err) => console.warn('API message delete:', err));
+
     try {
       await firebaseService.deleteMessage(id);
     } catch (err) {
@@ -965,14 +1115,18 @@ export class LocalDatabaseEngine {
 
   // --- Tasks CRUD ---
   public toggleTaskCompletion(taskId: string) {
+    let completedState = false;
     this.state.tasks = this.state.tasks.map((t) => {
       if (t.id === taskId) {
-        return { ...t, completed: !t.completed };
+        completedState = !t.completed;
+        return { ...t, completed: completedState };
       }
       return t;
     });
     this.setItem('tasks', this.state.tasks);
     this.notify();
+
+    portfolioApi.updateTask(taskId, { completed: completedState }).catch((err) => console.warn('API task update:', err));
   }
 
   public addTask(task: Omit<TaskReminder, 'id' | 'completed'>) {
@@ -986,6 +1140,9 @@ export class LocalDatabaseEngine {
     this.setItem('tasks', this.state.tasks);
     this.addTelemetry(`New encrypted task added: ${task.title}`, 'security', 'success');
     this.notify();
+
+    portfolioApi.addTask(newTask).catch((err) => console.warn('API task add:', err));
+
     return newTask;
   }
 
@@ -993,6 +1150,8 @@ export class LocalDatabaseEngine {
     this.state.tasks = this.state.tasks.filter((t) => t.id !== taskId);
     this.setItem('tasks', this.state.tasks);
     this.notify();
+
+    portfolioApi.deleteTask(taskId).catch((err) => console.warn('API task delete:', err));
   }
 
   public addTelemetry(event: string, type: 'auth' | 'sync' | 'security' | 'system' | 'analytics', status: 'success' | 'warning' | 'error') {
@@ -1005,6 +1164,8 @@ export class LocalDatabaseEngine {
     };
     this.state.telemetry = [log, ...this.state.telemetry.slice(0, 19)];
     this.setItem('telemetry', this.state.telemetry);
+
+    portfolioApi.logTelemetry(event, type, status).catch(() => {});
   }
 
   public exportDatabaseJSON(): string {
@@ -1114,6 +1275,9 @@ export class LocalDatabaseEngine {
     this.setItem('tasks', MOCK_TASK_REMINDERS);
     this.setItem('settings', DEFAULT_SETTINGS);
     this.setItem('analytics', DEFAULT_ANALYTICS);
+
+    // Reset Backend Express API database
+    portfolioApi.resetData().catch((err) => console.warn('API reset err:', err));
 
     try {
       await firebaseService.initializeDatabaseSeeds();
